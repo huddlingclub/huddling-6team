@@ -29,10 +29,10 @@ Claude Code가 이 레포에서 작업할 때 따르는 규칙입니다. 사람 
 index.html              화면 뼈대
 src/config.js           모든 숫자와 문구 데이터
 src/style.css           공통 스타일 (:root 변수)
-src/game.js             (예정) 게임 상태: 레벨, 단계, 점수, 타이머
-src/view.js             (예정) 상태 → 화면 반영, 그래픽 로딩
-src/share.js            (예정) 이미지 저장, 카카오톡 공유
-src/leaderboard.js      (예정) 기록 저장, 리더보드
+src/game.js             게임 상태: 레벨, 단계, 점수, 타이머
+src/view.js             상태 → 화면 반영, 그래픽 로딩
+src/share.js            이미지 저장, 카카오톡 공유
+src/leaderboard.js      기록 저장, 리더보드
 src/secrets.example.js  비밀 값 예시 (복사해서 secrets.js로)
 src/assets/images/      그래픽
 src/assets/sounds/      효과음
