@@ -1,0 +1,14 @@
+# 비밀 값 — 절대 커밋 금지
+src/secrets.js
+.env
+.env.*
+
+# OS / 에디터
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# 기타
+node_modules/
+*.log

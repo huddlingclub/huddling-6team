@@ -1,0 +1,37 @@
+/* 오늘도 다짐 — 공통 스타일
+ * 색, 글꼴, 둥근 정도 같은 공통 값은 아래 :root 변수로 관리합니다.
+ * 그래픽 스타일이 정해지면 화면·연출 담당이 이 값을 확정해 주세요. */
+
+:root {
+  --bg: #F7F0E3;
+  --ink: #4A3426;
+  --ink-soft: #8A6D55;
+  --accent: #8DB360;
+  --accent-dark: #6E9150;
+  --danger: #E2553F;
+  --radius: 20px;
+  --font-title: 'Jua', system-ui, sans-serif;
+  --font-body: system-ui, -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 임시 시작 화면 (index.html 교체 시 삭제) */
+.placeholder {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 48px 24px;
+  text-align: center;
+}
+.placeholder h1 { font-family: var(--font-title); font-size: 40px; margin: 0 0 8px; }
+.placeholder ol { text-align: left; line-height: 1.9; padding-left: 1.4em; }
+.placeholder .note { color: var(--ink-soft); font-size: 14px; }
