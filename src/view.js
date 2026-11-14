@@ -175,8 +175,15 @@ const View = (() => {
   }
 
   /* ---------- ① 홈 ---------- */
+  /* 리더보드에 보여 줄 기록이 없으면 리더보드 버튼을 숨김 (기획서 5-1) */
+  function boardButton(id, rowId, hasBoard, singleClass) {
+    $(id).hidden = !hasBoard;
+    $(rowId).classList.toggle(singleClass, !hasBoard);
+  }
+
   function renderHome(d) {
     $('homeTitle').textContent = C.GAME_NAME;
+    boardButton('homeBoard', 'homeActions', d.hasBoard, 'single');
     $('homeSub').textContent = C.TEXT.tagline;
     const plays = $('homePlays');
     plays.innerHTML = '<i></i>' + esc(playsText(d.plays));
@@ -206,7 +213,6 @@ const View = (() => {
     stage.setAttribute('aria-label', lv.name + '로 마늘 패기 (탭 또는 스페이스바)');
     renderGarlic(0, false);
     $('fx').innerHTML = '';
-    $('prog').textContent = '0/' + lv.taps;
     setBar($('progBar'), 0);
     renderTime(lv.timeLimit, lv.timeLimit);
     renderAnger(d.anger);
@@ -222,25 +228,24 @@ const View = (() => {
 
   function renderScore(score) { $('score').textContent = score.toLocaleString('ko-KR') + '점'; }
 
+  /* 시간·진행·화는 막대로만 (기획서 3-5) */
   function renderTime(left, limit) {
-    $('timeNum').textContent = Math.max(0, left).toFixed(1) + '초';
     setBar($('timeBar'), left / limit);
     $('timeRow').classList.toggle('low', left / limit < C.TIMING.lowTimeRatio);
   }
 
   function renderAnger(anger) {
-    $('angerNum').textContent = Math.max(0, Math.round(anger));
     setBar($('angerBar'), anger / C.ANGER.start);
   }
 
   function renderTap(d) {
     const lv = d.level;
     const stage = $('stage');
-    $('prog').textContent = d.taps + '/' + lv.taps;
     setBar($('progBar'), d.taps / lv.taps);
     if (d.stageChanged) renderGarlic(d.stage, true);
     restartClass(stage, 'hit');
-    if (lv.shake) restartClass($('s-play'), 'shake-' + lv.shake);
+    if (d.critical) restartClass($('s-play'), 'shake-crit');
+    else if (lv.shake) restartClass($('s-play'), 'shake-' + lv.shake);
     if (d.taps >= lv.taps) stage.classList.add('done');
 
     const fx = $('fx');
@@ -251,6 +256,15 @@ const View = (() => {
     pop.style.setProperty('--rx', Math.random());
     pop.style.setProperty('--ry', Math.random());
     fx.appendChild(pop);
+    if (d.critical) {
+      const crit = document.createElement('span');
+      crit.className = 'pop crit';
+      crit.textContent = C.TEXT.critical;
+      crit.style.setProperty('--rx', Math.random());
+      fx.appendChild(crit);
+      if (navigator.vibrate) { try { navigator.vibrate(C.CRITICAL.vibrateMs); } catch (e) { /* 진동 없음 */ } }
+      Sound.play('sfx-critical', true);
+    }
     for (let i = 0; i < C.FX.crumbsPerTap; i++) {
       const c = document.createElement('i');
       c.className = 'crumb';
@@ -259,19 +273,52 @@ const View = (() => {
       fx.appendChild(c);
     }
     Sound.play('sfx-' + lv.key, true);
+    // 다 쓴 효과 글자는 지움
+    while (fx.children.length > 40) fx.firstChild.remove();
+  }
+
+  /* 연타 콤보 (기획서 3-3): 0~9는 안 보임, 구간마다 연출이 달라짐 */
+  function renderCombo(d) {
+    const play = $('s-play');
+    const box = $('combo');
+    const prevFx = play.dataset.combo || '';
+    play.dataset.combo = d.fx;
+    $('comboNum').textContent = d.fx === 'max' ? '' : d.combo;
+    $('comboWord').textContent = d.fx === 'max' ? C.TEXT.maxCombo : 'COMBO';
+    $('comboMult').textContent = '×' + d.mult.toFixed(1);
+    if (d.bumped) restartClass(box, 'bump');
+    if (d.tierUp) {
+      restartClass(box, 'tier-up');
+      if (d.fx === 'flash' || d.fx === 'max') restartClass($('comboFlash'), 'flash');
+    }
+    if (!d.fx && prevFx) box.classList.remove('bump', 'tier-up');
   }
 
   /* ---------- 겹침 화면 ---------- */
+  /* game.js의 이름 → HTML 패널 */
+  const PANELS = { mission: 'intro', count: 'count', score: 'clear', fail: 'fail' };
+
+  function autoBar(panelId, seconds) {
+    const bar = $(panelId).querySelector('.auto-bar');
+    if (!bar) return;
+    bar.style.setProperty('--dur', seconds + 's');
+    const i = bar.querySelector('i');
+    i.style.animation = 'none';
+    void i.offsetWidth;
+    i.style.animation = '';
+  }
+
   function overlay(panel, d) {
     const o = $('overlay');
     if (!panel) { delete o.dataset.panel; return; }
-    if (panel === 'intro') {
+    if (panel === 'mission') {
       const lv = d.level;
       $('introLevel').textContent = 'LEVEL ' + lv.level;
       toolLayers($('introMini'), lv);
       $('introTool').textContent = '도구: ' + lv.name;
-      $('introTime').textContent = lv.timeLimit.toFixed(1) + '초 안에!';
+      $('introMission').textContent = lv.mission;
       $('introTaste').textContent = lv.taste;
+      autoBar('pIntro', d.seconds);
     }
     if (panel === 'count') {
       const n = $('countNum');
@@ -280,21 +327,18 @@ const View = (() => {
       $('countNote').textContent = d.note;
       Sound.play('sfx-countdown', false);
     }
-    if (panel === 'clear') {
+    if (panel === 'score') {
       $('clearTitle').textContent = 'LV' + d.level.level + ' CLEAR!';
       $('clearPts').textContent = '+' + d.points.toLocaleString('ko-KR') + '점';
       $('clearBonus').hidden = !d.bonus;
       $('clearBonus').textContent = '6쪽 완주 보너스 +' + (d.bonus || 0).toLocaleString('ko-KR') + '점';
-      $('clearNext').textContent = d.next ? '다음: LV' + d.next.level + ' ' + d.next.name : '오늘의 마늘을 다 다졌어요!';
+      autoBar('pClear', d.seconds);
       renderDots(d.index + 1, false);
       Sound.play('sfx-clear', false);
     }
     if (panel === 'fail') {
       $('failLv').textContent = 'LV' + d.level.level + ' ' + d.level.name;
-      const left = d.level.taps - d.taps;
-      $('failShort').textContent = d.short != null
-        ? d.short.toFixed(1) + '초 모자람 · ' + left + '번 더 쳐야 했어요'
-        : '한 번도 못 쳤어요. 마늘을 터치해 보세요';
+      $('failShort').textContent = C.TEXT.failLine; // 모자란 시간·탭 수 같은 숫자는 쓰지 않음 (기획서 3-5)
       $('continueBtn').hidden = !d.canContinue;
       $('continueLeft').hidden = !d.canContinue;
       $('continueLeft').textContent = '남은 기회 ' + d.continuesLeft + ' · 실패한 레벨부터, 점수는 그대로';
@@ -302,7 +346,7 @@ const View = (() => {
       renderDots(d.index, true);
       Sound.play('sfx-fail', false);
     }
-    o.dataset.panel = panel;
+    o.dataset.panel = PANELS[panel] || panel;
   }
 
   /* ---------- ⑥ 결과 ---------- */
@@ -313,12 +357,13 @@ const View = (() => {
     const badges = [];
     if (d.allClear) badges.push('<span class="badge gold">🏆 6쪽 완주</span>');
     if (d.continued) badges.push('<span class="badge">♻ 이어하기</span>');
+    if (d.crits) badges.push('<span class="badge">💥 크리티컬 ' + d.crits + '번</span>');
     if (d.nickCreated) badges.push('<span class="badge">🎉 첫 기록</span>');
     $('resBadges').innerHTML = badges.join('');
     renderRank(d);
-    $('dinnerWrap').hidden = !!d.menu;
-    $('dinnerCard').hidden = !d.menu;
-    if (d.menu) renderDinner(d.menu, d.menuGroup);
+    renderDinner(d.menu, d.menuGroup);
+    $('resBoard').hidden = !d.hasBoard;
+    $('resActions').classList.toggle('no-board', !d.hasBoard);
     $('resLeft').textContent = playsText(d.plays);
     $('resultCard').querySelector('.scroll').scrollTop = 0;
   }
@@ -333,8 +378,6 @@ const View = (() => {
   }
 
   function renderDinner(menu, group) {
-    $('dinnerWrap').hidden = true;
-    $('dinnerCard').hidden = false;
     $('menuGroup').textContent = group;
     $('menuName').textContent = menu.name;
     setGfx($('menuGfx'), menu.image, menu.name);
@@ -345,6 +388,7 @@ const View = (() => {
   function renderEnd(d) {
     setGfx(document.querySelector('#s-end .end-hero .gfx'), 'mascot-sleep');
     $('endPlays').textContent = d.plays.unlimited ? '시연 모드' : d.plays.left + '/' + d.plays.total + '판';
+    boardButton('endBoard', 'endActions', d.hasBoard, 'single');
   }
 
   /* ---------- 시트 ---------- */
@@ -409,7 +453,6 @@ const View = (() => {
     on('quitBtn', () => G.quit());
     on('continueBtn', () => G.continueRun());
     on('giveUpBtn', () => G.giveUp());
-    on('dinnerBtn', () => G.revealDinner());
     on('saveBtn', () => G.saveImage());
     on('shareBtn', () => G.shareResult());
     on('resBoard', () => G.openBoard());
@@ -464,14 +507,14 @@ const View = (() => {
     G = game;
     document.querySelectorAll('.gfx[data-gfx]').forEach(el => { const n = el.dataset.gfx; el.dataset.gfx = ''; setGfx(el, n); });
     bind();
-    Sound.preload(C.LEVELS.map(l => 'sfx-' + l.key).concat(['sfx-clear', 'sfx-fail', 'sfx-countdown']));
+    Sound.preload(C.LEVELS.map(l => 'sfx-' + l.key).concat(['sfx-critical', 'sfx-clear', 'sfx-fail', 'sfx-countdown']));
     // 첫 레벨 그래픽은 미리 찾아 둠
     C.GARLIC_STAGES.forEach(s => probe(s.image));
   }
 
   return {
-    init, show, toast, renderHome, renderLevel, renderGarlic, renderScore, renderTime, renderAnger, renderTap,
-    overlay, renderResult, renderDinner, renderEnd, renderBoard, renderHistory, closeSheets,
+    init, show, toast, renderHome, renderLevel, renderGarlic, renderScore, renderTime, renderAnger, renderTap, renderCombo,
+    overlay, renderResult, renderEnd, renderBoard, renderHistory, closeSheets,
     openNick, closeNick, nickError, gfxSource, blurAll: () => document.activeElement && document.activeElement.blur && document.activeElement.blur()
   };
 })();

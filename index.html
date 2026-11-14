@@ -342,7 +342,7 @@
       <h1 class="h-title game-title" id="homeTitle">오늘도 다짐</h1>
       <p id="homeSub"></p>
       <div class="plays" id="homePlays"><i></i>오늘 6/6판 남음</div>
-      <div class="row2">
+      <div class="row2" id="homeActions">
         <button class="btn btn-primary" id="startBtn">시작하기</button>
         <button class="btn btn-soft" id="homeBoard">리더보드</button>
       </div>
@@ -362,8 +362,10 @@
       <div class="dots" id="lvDots"></div>
     </div>
     <div class="hud">
-      <div class="meter" id="timeRow"><div class="label"><span>남은 시간</span><b id="timeNum">5.0초</b></div><div class="gauge"><div id="timeBar"></div></div></div>
+      <div class="meter" id="timeRow"><div class="label"><span>남은 시간</span></div><div class="gauge"><div id="timeBar"></div></div></div>
     </div>
+    <div class="combo-flash" id="comboFlash" aria-hidden="true"></div>
+    <div class="combo" id="combo" aria-live="polite"><b id="comboNum">0</b><span id="comboWord">COMBO</span><em id="comboMult">×1.0</em></div>
     <div class="stage comp" id="stage" data-tool="auto-mixer" role="button" aria-label="마늘 패기 (탭 또는 스페이스바)">
       <div class="layer base gfx"></div>
       <div class="layer target" id="target"><div class="gfx" data-gfx="garlic-stage0"></div></div>
@@ -373,8 +375,8 @@
     </div>
     <div class="stage-name" id="stageName">통마늘</div>
     <div class="hud hud2">
-      <div class="meter"><div class="label"><span>진행</span><b id="prog">0/3</b></div><div class="gauge"><div id="progBar"></div></div></div>
-      <div class="meter"><div class="label"><span>화</span><b class="hot" id="angerNum">100</b></div><div class="gauge"><div id="angerBar"></div></div></div>
+      <div class="meter"><div class="label"><span>진행</span></div><div class="gauge"><div id="progBar"></div></div></div>
+      <div class="meter"><div class="label"><span>화</span></div><div class="gauge"><div id="angerBar"></div></div></div>
     </div>
     <p class="hint">마늘을 터치<span class="pc"> / Space</span></p>
   </section>
@@ -385,24 +387,23 @@
     <div class="chef"><div class="gfx" data-gfx="mascot-idle"></div></div>
     <article id="resultCard">
       <div class="scroll">
-        <div class="eyebrow">오늘의 다짐 기록</div>
-        <div class="res-score"><b id="resScore">0</b>점</div>
-        <div class="res-meta" id="resMeta"></div>
-        <div class="badges" id="resBadges"></div>
-        <div class="res-rank"><span id="resRank"></span> <button class="pen" id="resNickEdit" aria-label="닉네임 바꾸기">✎ 닉네임 바꾸기</button></div>
-        <div id="dinnerWrap"><button class="btn btn-primary btn-block" id="dinnerBtn">오늘의 저녁 보기</button></div>
-        <div id="dinnerCard" hidden>
+        <div id="dinnerCard">
           <div class="din-eyebrow">오늘 저녁, 이거 어때요?</div>
           <div id="menuGroup"></div>
           <div id="menuName"></div>
           <div class="menu-art"><div class="gfx" id="menuGfx"></div></div>
           <p id="menuPs"></p>
         </div>
+        <div class="eyebrow">오늘의 다짐 기록</div>
+        <div class="res-score"><b id="resScore">0</b>점</div>
+        <div class="res-meta" id="resMeta"></div>
+        <div class="badges" id="resBadges"></div>
+        <div class="res-rank"><span id="resRank"></span> <button class="pen" id="resNickEdit" aria-label="닉네임 바꾸기">✎ 닉네임 바꾸기</button></div>
       </div>
       <div class="actions">
-        <div class="grid4">
+        <div class="grid4" id="resActions">
           <button class="btn btn-soft sm" id="saveBtn">이미지 저장</button>
-          <button class="btn btn-kakao sm" id="shareBtn">카카오톡 공유</button>
+          <button class="btn btn-share sm" id="shareBtn">친구에게 공유</button>
           <button class="btn btn-soft sm" id="resBoard">리더보드</button>
           <button class="btn btn-primary sm" id="retryBtn">다시 하기</button>
         </div>
@@ -419,7 +420,7 @@
       <p>내일 또 만나요</p>
       <div class="plays" id="endPlays">0/6판</div>
       <small>판 수는 자정(한국 시간)에 다시 채워져요</small>
-      <div class="row2"><button class="btn btn-primary" id="endBoard">리더보드</button><button class="btn btn-soft" id="endHome">홈으로</button></div>
+      <div class="row2" id="endActions"><button class="btn btn-primary" id="endBoard">리더보드</button><button class="btn btn-soft" id="endHome">홈으로</button></div>
     </div>
   </section>
 
@@ -429,21 +430,22 @@
       <div class="lvl" id="introLevel">LEVEL 1</div>
       <div class="comp mini" id="introMini"><div class="layer base gfx"></div><div class="layer front gfx"></div><div class="layer tool gfx"></div></div>
       <div class="tool-tag" id="introTool">도구: 자동 믹서기</div>
-      <div class="big" id="introTime">5.0초 안에!</div>
+      <div class="mission" id="introMission">미션</div>
       <p class="sub" id="introTaste"></p>
+      <div class="auto-bar" aria-hidden="true"><i></i></div>
     </div>
     <div class="panel count" id="pCount"><div class="num" id="countNum">3</div><p class="sub" id="countNote">준비!</p></div>
     <div class="panel" id="pClear">
       <div class="clear-title" id="clearTitle">LV1 CLEAR!</div>
       <div class="pts" id="clearPts">+0점</div>
       <div class="bonus" id="clearBonus" hidden></div>
-      <p class="sub" id="clearNext"></p>
+      <div class="auto-bar" aria-hidden="true"><i></i></div>
     </div>
     <div class="panel" id="pFail">
       <div class="fail-title">FAIL</div>
       <div class="tool-tag" id="failLv">LV1</div>
       <p class="sub" id="failShort"></p>
-      <button class="btn btn-kakao btn-block" id="continueBtn">친구에게 공유하고 한 번 더</button>
+      <button class="btn btn-share btn-block" id="continueBtn">친구에게 공유하고 한 번 더</button>
       <p class="tiny" id="continueLeft">남은 기회 1 · 실패한 레벨부터, 점수는 그대로</p>
       <button class="btn btn-soft btn-block" id="giveUpBtn">결과 보기</button>
     </div>

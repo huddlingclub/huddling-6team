@@ -1,77 +1,47 @@
 /* =============================================================
- * 공유와 이미지 저장 (기획서 3-3, 8장)
+ * 공유와 메뉴 카드 이미지 저장 (기획서 3-4, 4장, 7-1)
  *
- * 공유 순서: 카카오톡(키가 있을 때) → 기기 기본 공유 창 → 링크 복사
- * 공유 창을 열기만 해도 성공으로 칩니다(기획서 3-3: 실제 전송은 확인할 수 없음).
+ * 공유: 모바일은 기기 공유 바텀시트, PC는 링크 복사 + "링크 복사 완료!"
+ * 카카오 SDK는 쓰지 않습니다. 실제 전송은 확인할 수 없어서 시트를 열거나 복사하면 인정합니다.
  * 이미지 저장만 <canvas>를 씁니다(기획서 7-1 예외).
  * ============================================================= */
 
 const Share = (() => {
   const S = CONFIG.SHARE;
-  let kakaoReady = null;
 
-  function kakaoKey() {
-    return (typeof SECRETS !== 'undefined' && SECRETS && SECRETS.KAKAO_JS_KEY) || '';
-  }
   function siteUrl() {
     return location.origin + location.pathname.replace(/index\.html$/, '');
   }
-  function absolute(path) { return new URL(path, siteUrl()).href; }
   function fill(tpl, data) { return tpl.replace(/\{(\w+)\}/g, (_, k) => (data[k] == null ? '' : data[k])); }
 
-  /* 카카오 SDK는 키가 있을 때만 불러옴 */
-  function loadKakao() {
-    const key = kakaoKey();
-    if (!key) return Promise.resolve(false);
-    if (kakaoReady) return kakaoReady;
-    kakaoReady = new Promise(resolve => {
-      const s = document.createElement('script');
-      s.src = S.kakaoSdkUrl;
-      s.crossOrigin = 'anonymous';
-      s.onload = () => {
-        try { if (!window.Kakao.isInitialized()) window.Kakao.init(key); resolve(true); } catch (e) { resolve(false); }
-      };
-      s.onerror = () => resolve(false);
-      document.head.appendChild(s);
-    });
-    return kakaoReady;
+  /* 손가락으로 쓰는 기기(휴대폰·태블릿)이고 공유 바텀시트를 지원하면 모바일 방식 */
+  function isMobile() {
+    const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    return !!(coarse && navigator.share);
   }
 
-  /* 돌려주는 값: { ok: 공유 창을 열었는지, method: 'kakao' | 'native' | 'copy' | 'prompt' } */
+  /* 돌려주는 값: { ok: 공유로 인정하는지, method: 'native' | 'copy' | 'prompt' }
+   * 모바일: 바텀시트를 열면 인정 (닫아도 인정) / PC: 링크 복사가 끝나면 인정 (기획서 3-4) */
   async function share(text) {
     const url = siteUrl();
-    if (await loadKakao()) {
-      try {
-        window.Kakao.Share.sendDefault({
-          objectType: 'feed',
-          content: { title: S.title, description: text, imageUrl: absolute(S.ogImage), link: { mobileWebUrl: url, webUrl: url } },
-          buttons: [{ title: S.buttonText, link: { mobileWebUrl: url, webUrl: url } }]
-        });
-        return { ok: true, method: 'kakao' };
-      } catch (e) { /* 아래 방법으로 대신 */ }
-    }
-    if (navigator.share) {
+    if (isMobile()) {
       try {
         await navigator.share({ title: S.title, text, url });
         return { ok: true, method: 'native' };
       } catch (e) {
-        if (e && e.name === 'AbortError') return { ok: true, method: 'native' }; // 창은 열렸음
+        if (e && e.name === 'AbortError') return { ok: true, method: 'native' }; // 시트는 열렸음
       }
     }
     try {
-      await navigator.clipboard.writeText(text + ' ' + url);
+      await navigator.clipboard.writeText(url);
       return { ok: true, method: 'copy' };
     } catch (e) { /* 아래로 */ }
     window.prompt('아래 링크를 복사해서 친구에게 보내 주세요', url);
     return { ok: true, method: 'prompt' };
   }
 
-  function resultText(r) {
-    return fill(r.menu ? S.resultText : S.resultTextNoMenu, r);
-  }
-  function continueText(r) {
-    return fill(S.continueText, r);
-  }
+  function resultText(r) { return fill(S.resultText, r); }
+  function continueText(r) { return fill(S.continueText, r); }
 
   /* ---------- 결과 카드 이미지 ---------- */
   function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
@@ -113,7 +83,8 @@ const Share = (() => {
     ctx.closePath();
   }
 
-  /* r: { score, metaText, rankText, nick, menu, menuGroup, menuPs, menuArtSrc } */
+  /* 메뉴 카드 (기획서 4장): 메뉴명, 한 줄 PS, 점수
+   * r: { score, metaText, nick, menu, menuGroup, menuPs, menuArtSrc } */
   async function saveImage(r) {
     const K = S.card, F = K.font;
     const canvas = document.createElement('canvas');
@@ -125,6 +96,10 @@ const Share = (() => {
     const body = cssVar('--font-body') || 'sans-serif';
     const ink = cssVar('--ink'), soft = cssVar('--ink-soft'), accent = cssVar('--accent-dark');
     const W = K.width, P = K.pad, inner = W - P * 2;
+    // 제목 글꼴은 글자별로 나눠 받아서, 카드에 쓸 글자를 먼저 불러 둠
+    if (document.fonts && document.fonts.load) {
+      try { await document.fonts.load(`${F.menu}px ${title}`, r.menu + Number(r.score).toLocaleString('ko-KR') + '점'); } catch (e) { /* 기본 글꼴 */ }
+    }
 
     ctx.fillStyle = cssVar('--bg');
     ctx.fillRect(0, 0, W, K.height);
@@ -138,49 +113,42 @@ const Share = (() => {
 
     ctx.fillStyle = accent;
     ctx.font = `700 ${F.eyebrow}px ${body}`;
-    ctx.fillText('오늘의 다짐 기록', W / 2, y);
-    y += F.score;
+    ctx.fillText('오늘 저녁, 이거 어때요? · ' + r.menuGroup, W / 2, y);
+    y += F.eyebrow;
 
+    const art = await loadImage(r.menuArtSrc);
+    if (art) {
+      const h = K.menuArtHeight, w = h * (art.width / art.height || 1);
+      const fit = Math.min(1, inner / w);
+      ctx.drawImage(art, W / 2 - (w * fit) / 2, y, w * fit, h * fit);
+      y += h * fit;
+    }
+
+    y += F.menu * K.lineGap;
     ctx.fillStyle = ink;
+    ctx.font = `${F.menu}px ${title}`;
+    ctx.fillText(r.menu, W / 2, y);
+    y += F.ps * K.lineGap * 0.4;
+    ctx.font = `${F.ps}px ${body}`;
+    for (const line of wrapLines(ctx, r.menuPs, inner)) { y += F.ps * K.lineGap; ctx.fillText(line, W / 2, y); }
+
+    y += F.score * K.lineGap;
     ctx.font = `${F.score}px ${title}`;
     const scoreText = Number(r.score).toLocaleString('ko-KR');
     const sw = ctx.measureText(scoreText).width;
     ctx.font = `${F.unit}px ${title}`;
     const uw = ctx.measureText('점').width;
     ctx.textAlign = 'left';
+    ctx.fillStyle = accent;
     ctx.font = `${F.score}px ${title}`;
     ctx.fillText(scoreText, W / 2 - (sw + uw) / 2, y);
     ctx.font = `${F.unit}px ${title}`;
     ctx.fillText('점', W / 2 - (sw + uw) / 2 + sw, y);
     ctx.textAlign = 'center';
-    y += F.meta * K.lineGap * 1.4;
-
+    y += F.meta * K.lineGap;
     ctx.fillStyle = soft;
     ctx.font = `${F.meta}px ${body}`;
     ctx.fillText(r.metaText, W / 2, y);
-    if (r.rankText) { y += F.meta * K.lineGap; ctx.fillText(r.rankText, W / 2, y); }
-    y += F.meta * K.lineGap;
-
-    if (r.menu) {
-      const art = await loadImage(r.menuArtSrc);
-      if (art) {
-        const h = K.menuArtHeight, w = h * (art.width / art.height || 1);
-        const fit = Math.min(1, inner / w);
-        ctx.drawImage(art, W / 2 - (w * fit) / 2, y, w * fit, h * fit);
-        y += h * fit;
-      }
-      y += F.menuGroup * K.lineGap;
-      ctx.fillStyle = accent;
-      ctx.font = `700 ${F.menuGroup}px ${body}`;
-      ctx.fillText('오늘 저녁, 이거 어때요? · ' + r.menuGroup, W / 2, y);
-      y += F.menu * K.lineGap;
-      ctx.fillStyle = ink;
-      ctx.font = `${F.menu}px ${title}`;
-      ctx.fillText(r.menu, W / 2, y);
-      y += F.ps * K.lineGap;
-      ctx.font = `${F.ps}px ${body}`;
-      for (const line of wrapLines(ctx, r.menuPs, inner)) { y += F.ps * K.lineGap; ctx.fillText(line, W / 2, y); }
-    }
 
     ctx.fillStyle = soft;
     ctx.font = `${F.foot}px ${body}`;
@@ -200,5 +168,5 @@ const Share = (() => {
     return true;
   }
 
-  return { share, resultText, continueText, saveImage, preload: loadKakao };
+  return { share, resultText, continueText, saveImage };
 })();
