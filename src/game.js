@@ -1,13 +1,13 @@
 /* =============================================================
- * 게임 상태: 레벨, 단계, 점수, 타이머 (기획서 2~3장)
+ * 게임 상태: 레벨, 단계, 점수, 콤보, 타이머 (기획서 2~3장, v1.3)
  *
  * 여기서는 상태만 바꾸고, 화면은 View.xxx()에 맡깁니다.
  * 숫자는 모두 CONFIG에서 가져옵니다.
  *
  * phase 흐름
- *   home → intro → count → play → clear → intro … → result
- *                                └→ fail → (공유) → intro / result
- *   play 중 화면을 벗어나면 paused → 돌아오면 3·2·1 후 이어서
+ *   home → mission → play → score → mission … → result
+ *                      └→ fail → (공유) → mission / result
+ *   화면을 벗어나면 paused → 돌아오면 3·2·1 후 이어서 (기획서 3-5)
  * ============================================================= */
 
 const Game = (() => {
@@ -20,9 +20,11 @@ const Game = (() => {
     run: null,        // 지금 판
     lv: null,         // 지금 레벨
     record: null,     // 결과 화면에 띄운 판 기록
+    menu: null,       // 결과 화면의 메뉴 { menu, group }
     timers: [],
     raf: 0,
-    resumeTo: null    // 'level' = 레벨 처음부터, 'play' = 하던 곳부터
+    resumeTo: null,   // 'level' = 미션 팝업부터, 'play' = 하던 곳부터
+    nickCreated: false
   };
 
   /* ---------- 타이머 ---------- */
@@ -33,7 +35,7 @@ const Game = (() => {
     cancelAnimationFrame(S.raf);
   }
 
-  /* ---------- 하루 판 수 (기획서 2장, 3-4) ---------- */
+  /* ---------- 하루 판 수 (기획서 2장, 3-5) ---------- */
   function playsUsed() {
     const p = Store.get('plays', null);
     return p && p.day === Records.dayKey(Date.now()) ? p.used : 0;
@@ -53,14 +55,14 @@ const Game = (() => {
     S.phase = 'home'; S.run = null;
     View.overlay(null);
     View.show('home');
-    View.renderHome({ plays: plays(), nick: Records.nickText() });
+    View.renderHome({ plays: plays(), nick: Records.nickText(), hasBoard: Records.hasBoard(Date.now()) });
   }
   function showEnd() {
     clearTimers();
     S.phase = 'end';
     View.overlay(null);
     View.show('end');
-    View.renderEnd({ plays: plays() });
+    View.renderEnd({ plays: plays(), hasBoard: Records.hasBoard(Date.now()) });
   }
 
   /* ---------- 판 시작 ---------- */
@@ -75,33 +77,39 @@ const Game = (() => {
       anger: C.ANGER.start,
       cleared: 0,
       continued: false,
-      continuesLeft: C.CONTINUE.perRun
+      continuesLeft: C.CONTINUE.perRun,
+      combo: 0,             // 레벨이 바뀌어도 이어짐
+      comboGap: 0,          // 마지막 탭 뒤로 플레이 중에 흐른 시간 (팝업 동안은 안 셈)
+      crits: 0
     };
     S.record = null;
+    S.menu = null;
     View.blurAll();
     View.show('play');
+    View.renderCombo(comboView(false));
     startLevel();
   }
 
   function level() { return LEVELS[S.run.index]; }
 
+  /* 미션 팝업 → 자동으로 플레이 시작 (기획서 3-5) */
   function startLevel() {
     clearTimers();
-    S.lv = { taps: 0, stage: 0, elapsedBefore: 0, startedAt: 0, tapTimes: [] };
+    S.lv = { taps: 0, stage: 0, elapsedBefore: 0, startedAt: 0, tapTimes: [], lastTapAt: 0, bestTier: 0, crits: 0 };
     const lv = level();
     View.renderLevel({ level: lv, index: S.run.index, score: S.run.score, anger: S.run.anger });
-    S.phase = 'intro';
-    View.overlay('intro', { level: lv });
-    later(C.TIMING.introPanelSeconds, () => countdown('준비!', beginPlay));
+    S.phase = 'mission';
+    View.overlay('mission', { level: lv, seconds: C.TIMING.missionPopupSeconds });
+    later(C.TIMING.missionPopupSeconds, () => { View.overlay(null); beginPlay(); });
   }
 
-  /* 3·2·1 (이 동안 시간은 안 감) */
-  function countdown(note, done) {
+  /* 3·2·1 (앱을 벗어났다 돌아왔을 때만) */
+  function countdown(done) {
     S.phase = 'count';
     let n = C.TIMING.countdownFrom;
     const step = () => {
       if (n <= 0) { View.overlay(null); done(); return; }
-      View.overlay('count', { n, note });
+      View.overlay('count', { n, note: '다시 시작!' });
       n -= 1;
       later(C.TIMING.countStepSeconds, step);
     };
@@ -110,7 +118,9 @@ const Game = (() => {
 
   function beginPlay() {
     S.phase = 'play';
-    S.lv.startedAt = performance.now();
+    const now = performance.now();
+    S.lv.startedAt = now;
+    S.lv.lastTapAt = now - S.run.comboGap * MS; // 팝업 동안 멈춘 시간은 콤보 간격에 안 넣음
     loop();
   }
 
@@ -119,12 +129,34 @@ const Game = (() => {
     return lv.elapsedBefore + (S.phase === 'play' ? (performance.now() - lv.startedAt) / MS : 0);
   }
 
+  /* ---------- 콤보 (기획서 3-3) ---------- */
+  function tierIndex(combo) {
+    let i = 0;
+    C.COMBO.tiers.forEach((t, k) => { if (combo >= t.min) i = k; });
+    return i;
+  }
+  function comboView(bumped, tierUp) {
+    const combo = S.run ? S.run.combo : 0;
+    const i = tierIndex(combo);
+    const tier = C.COMBO.tiers[i];
+    return { combo, mult: tier.mult, fx: tier.fx, bumped: !!bumped, tierUp: !!tierUp };
+  }
+  function breakCombo() {
+    if (!S.run || S.run.combo === 0) return;
+    S.run.combo = 0;
+    View.renderCombo(comboView(false));
+  }
+  function freezeComboGap() {
+    if (S.phase === 'play') S.run.comboGap = (performance.now() - S.lv.lastTapAt) / MS;
+  }
+
   function loop() {
     if (S.phase !== 'play') return;
     const limit = level().timeLimit;
     const t = elapsed();
     if (t >= limit) { View.renderTime(0, limit); fail(); return; }
     View.renderTime(limit - t, limit);
+    if (S.run.combo > 0 && performance.now() - S.lv.lastTapAt > C.COMBO.gapSeconds * MS) breakCombo();
     S.raf = requestAnimationFrame(loop);
   }
 
@@ -132,21 +164,35 @@ const Game = (() => {
   function tap() {
     if (S.phase !== 'play') return;
     const lv = level();
+    const run = S.run;
     const now = performance.now();
     if (elapsed() >= lv.timeLimit) { fail(); return; }
 
-    // 매크로 방지: 최근 1초 동안 maxTapsPerSecond번을 넘으면 무시 (기획서 3-4)
+    // 매크로 방지: 최근 1초 동안 maxTapsPerSecond번을 넘으면 무시하고 콤보도 끊음 (기획서 3-5)
     S.lv.tapTimes = S.lv.tapTimes.filter(t => now - t < MS);
-    if (S.lv.tapTimes.length >= C.ANTI_MACRO.maxTapsPerSecond) return;
+    if (S.lv.tapTimes.length >= C.ANTI_MACRO.maxTapsPerSecond) { breakCombo(); return; }
     S.lv.tapTimes.push(now);
 
-    S.lv.taps += 1;
+    // 콤보: 탭 사이가 gapSeconds 이내면 이어짐
+    const before = tierIndex(run.combo);
+    run.combo = now - S.lv.lastTapAt <= C.COMBO.gapSeconds * MS ? run.combo + 1 : 1;
+    S.lv.lastTapAt = now;
+    const tier = tierIndex(run.combo);
+    S.lv.bestTier = Math.max(S.lv.bestTier, tier);
+
+    // 크리티컬: 확률로 터지고, 그 탭은 tapValue탭으로 인정
+    const critical = Math.random() < C.CRITICAL.chance;
+    if (critical) { S.lv.crits += 1; run.crits += 1; }
+    S.lv.taps = Math.min(lv.taps, S.lv.taps + (critical ? C.CRITICAL.tapValue : 1));
+
     const ratio = S.lv.taps / lv.taps;
     let stage = 0;
     C.GARLIC_STAGES.forEach((s, i) => { if (ratio >= s.at) stage = i; });
     const stageChanged = stage !== S.lv.stage;
     S.lv.stage = stage;
-    View.renderTap({ level: lv, taps: S.lv.taps, stage, stageChanged });
+
+    View.renderTap({ level: lv, taps: S.lv.taps, stage, stageChanged, critical });
+    View.renderCombo(comboView(true, tier > before));
 
     if (S.lv.taps >= lv.taps) clear();
   }
@@ -155,11 +201,14 @@ const Game = (() => {
   function clear() {
     const lv = level();
     const t = Math.max(elapsed(), Number.EPSILON);
-    S.phase = 'clear';
+    freezeComboGap();
+    S.phase = 'score';
     cancelAnimationFrame(S.raf);
 
     const speed = lv.taps / t;
-    const points = Math.round(speed * C.SCORE.perLevelBase * lv.level);
+    const mult = C.COMBO.tiers[S.lv.bestTier].mult;
+    const critBonus = S.lv.crits * C.CRITICAL.bonusPerLevel * lv.level;
+    const points = Math.round(speed * C.SCORE.perLevelBase * lv.level * mult + critBonus);
     const run = S.run;
     run.levelScores[run.index] = points;
     run.score += points;
@@ -172,34 +221,34 @@ const Game = (() => {
 
     View.renderScore(run.score);
     View.renderAnger(run.anger);
-    View.overlay('clear', { level: lv, index: run.index, points, bonus, next: last ? null : LEVELS[run.index + 1] });
+    View.overlay('score', { level: lv, index: run.index, points, bonus, seconds: C.TIMING.scorePopupSeconds });
 
-    later(C.TIMING.clearPopupSeconds, () => {
+    later(C.TIMING.scorePopupSeconds, () => {
       if (last) { finish(); return; }
       run.index += 1;
       startLevel();
     });
   }
 
-  /* ---------- FAIL과 이어하기 (기획서 3-3) ---------- */
+  /* ---------- FAIL과 이어하기 (기획서 3-4) ---------- */
   function fail() {
     const lv = level();
     S.phase = 'fail';
     clearTimers();
-    const taps = S.lv.taps;
-    // 지금 속도로 끝까지 쳤다면 얼마나 더 걸렸을지
-    const short = taps > 0 ? lv.timeLimit * lv.taps / taps - lv.timeLimit : null;
+    S.run.combo = 0;
+    S.run.comboGap = 0;
+    View.renderCombo(comboView(false));
     const canContinue = S.run.continuesLeft > 0;
-    View.overlay('fail', { level: lv, index: S.run.index, taps, short, canContinue, continuesLeft: S.run.continuesLeft });
+    View.overlay('fail', { level: lv, index: S.run.index, canContinue, continuesLeft: S.run.continuesLeft });
     if (!canContinue) later(C.TIMING.failToResultSeconds, finish);
   }
 
   async function continueRun() {
     if (S.phase !== 'fail' || S.run.continuesLeft <= 0) return;
-    S.phase = 'sharing'; // 공유 창 때문에 화면을 벗어나도 일시정지하지 않음
+    S.phase = 'sharing'; // 공유 바텀시트 때문에 화면을 벗어나도 일시정지하지 않음
     const lv = level();
     const res = await Share.share(Share.continueText({ level: lv.level, score: S.run.score }));
-    if (res.method === 'copy') View.toast('링크를 복사했어요. 친구에게 붙여 넣어 주세요');
+    if (res.method === 'copy') View.toast(C.SHARE.copiedToast);
     if (!res.ok) { S.phase = 'fail'; return; }
     S.run.continued = true;
     S.run.continuesLeft -= 1;
@@ -211,20 +260,25 @@ const Game = (() => {
     finish();
   }
 
-  /* ---------- 일시정지 (기획서 3-4 앱 이탈) ---------- */
+  /* ---------- 일시정지 (기획서 3-5 앱 이탈) ---------- */
   function pause() {
     if (S.phase === 'play') {
+      freezeComboGap();
       S.lv.elapsedBefore = elapsed();
       clearTimers();
       S.phase = 'paused';
       S.resumeTo = 'play';
-    } else if (S.phase === 'intro' || S.phase === 'count') {
+    } else if (S.phase === 'count') {
       clearTimers();
       View.overlay(null);
       S.phase = 'paused';
-      S.resumeTo = S.lv.elapsedBefore > 0 ? 'play' : 'level';
-    } else if (S.phase === 'clear') {
-      // 클리어 연출 중에 나가면 다음 레벨은 돌아온 뒤에 시작
+    } else if (S.phase === 'mission') {
+      clearTimers();
+      View.overlay(null);
+      S.phase = 'paused';
+      S.resumeTo = 'level';
+    } else if (S.phase === 'score') {
+      // 점수 팝업 중에 나가면 다음 레벨은 돌아온 뒤 미션 팝업부터
       clearTimers();
       View.overlay(null);
       if (S.run.index === LEVELS.length - 1) { finish(); return; }
@@ -237,36 +291,48 @@ const Game = (() => {
   function resume() {
     if (S.phase !== 'paused' || document.hidden) return;
     if (S.resumeTo === 'level') startLevel();
-    else countdown('다시 시작!', beginPlay);
+    else countdown(beginPlay);
   }
 
   function quit() {
     if (!S.run) return home();
-    const wasPlaying = S.phase === 'play' || S.phase === 'intro' || S.phase === 'count';
+    const wasPlaying = ['play', 'mission', 'count'].includes(S.phase);
     pause();
     if (window.confirm('그만하고 홈으로 갈까요?\n이번 판은 돌려받을 수 없어요.')) { home(); return; }
     if (wasPlaying) resume();
   }
 
-  /* ---------- 결과 (기획서 2장, 6장 ⑥) ---------- */
+  /* ---------- 결과 (기획서 2장, 4장, 6장) ---------- */
   function reliefPercent(run) {
     return Math.min(100, Math.round((C.ANGER.start - run.anger) / C.ANGER.start * 100));
+  }
+
+  /* 오늘의 저녁: 결과 화면이 열리면 바로 뽑음. 직전 판 메뉴는 뺌 (기획서 4장) */
+  function pickMenu(levelReached) {
+    const group = C.MENU_GROUPS.find(g => levelReached >= g.minLevel && levelReached <= g.maxLevel) || C.MENU_GROUPS[0];
+    const lastMenu = Store.get('lastMenu', null);
+    const pool = group.menus.filter(m => m.name !== lastMenu);
+    const list = pool.length ? pool : group.menus;
+    const menu = list[Math.floor(Math.random() * list.length)];
+    Store.set('lastMenu', menu.name);
+    return { group, menu };
   }
 
   function resultData() {
     const run = S.run, rec = S.record;
     const relief = reliefPercent(run);
-    const metaText = (run.cleared ? 'LV' + run.cleared + '까지 · ' + run.cleared + '쪽 다짐' : 'LV1에서 멈춤') + ' · 화 ' + relief + '% 해소';
-    const menu = rec.menu ? findMenu(rec.menu) : null;
+    const metaText = (run.cleared ? 'LV' + run.cleared : 'LV1 실패') + ' · 화 ' + relief + '% 해소';
     return {
       score: run.score, relief, metaText,
       allClear: run.cleared === LEVELS.length,
       continued: run.continued,
+      crits: run.crits,
       nick: Records.nickText(),
       nickCreated: S.nickCreated,
       rank: Records.rankOf(rec),
-      menu: menu && menu.menu, menuGroup: menu && menu.group.label,
-      plays: plays()
+      menu: S.menu.menu, menuGroup: S.menu.group.label,
+      plays: plays(),
+      hasBoard: Records.hasBoard(Date.now())
     };
   }
 
@@ -277,58 +343,36 @@ const Game = (() => {
     const run = S.run;
     const made = Records.ensureNick();
     S.nickCreated = made.created;
+    S.menu = pickMenu(run.cleared);
     S.record = Records.add({
       nick: Records.nickText(made.nick),
       score: run.score,
       level: run.cleared,
       continued: run.continued,
-      relief: reliefPercent(run)
+      relief: reliefPercent(run),
+      menu: S.menu.menu.name
     });
     View.show('result');
     View.renderResult(resultData());
   }
 
-  /* ---------- 오늘의 저녁 (기획서 4장) ---------- */
-  function groupFor(levelReached) {
-    return C.MENU_GROUPS.find(g => levelReached >= g.minLevel && levelReached <= g.maxLevel) || C.MENU_GROUPS[0];
-  }
-  function findMenu(name) {
-    for (const group of C.MENU_GROUPS) {
-      const menu = group.menus.find(m => m.name === name);
-      if (menu) return { group, menu };
-    }
-    return null;
-  }
-  function revealDinner() {
-    if (S.phase !== 'result' || !S.record || S.record.menu) return;
-    const group = groupFor(S.run.cleared);
-    const lastMenu = Store.get('lastMenu', null);
-    const pool = group.menus.filter(m => m.name !== lastMenu);
-    const pick = (pool.length ? pool : group.menus)[Math.floor(Math.random() * (pool.length || group.menus.length))];
-    S.record.menu = pick.name;
-    Records.update(S.record.id, { menu: pick.name });
-    Store.set('lastMenu', pick.name);
-    View.renderDinner(pick, group.label);
-  }
-
-  /* ---------- 결과 공유, 이미지 저장 ---------- */
+  /* ---------- 결과 공유, 메뉴 카드 저장 ---------- */
   async function shareResult() {
     if (!S.record) return;
     const d = resultData();
-    const res = await Share.share(Share.resultText({ score: d.score.toLocaleString('ko-KR'), relief: d.relief, menu: d.menu && d.menu.name, level: S.run.cleared }));
-    if (res.method === 'copy') View.toast('링크를 복사했어요. 친구에게 붙여 넣어 주세요');
+    const res = await Share.share(Share.resultText({ score: d.score.toLocaleString('ko-KR'), relief: d.relief, menu: d.menu.name, level: S.run.cleared }));
+    if (res.method === 'copy') View.toast(C.SHARE.copiedToast);
   }
 
   async function saveImage() {
     if (!S.record) return;
     const d = resultData();
-    const rankText = d.rank ? '이번 달 랭킹 ' + d.rank + '위' : '';
     const ok = await Share.saveImage({
-      score: d.score, metaText: d.metaText, rankText, nick: d.nick,
-      menu: d.menu && d.menu.name, menuGroup: d.menuGroup, menuPs: d.menu && d.menu.ps,
-      menuArtSrc: d.menu ? await View.gfxSource(d.menu.image) : null
+      score: d.score, metaText: d.metaText, nick: d.nick,
+      menu: d.menu.name, menuGroup: d.menuGroup, menuPs: d.menu.ps,
+      menuArtSrc: await View.gfxSource(d.menu.image)
     });
-    View.toast(ok ? '이미지를 저장했어요' : '이미지를 만들지 못했어요');
+    View.toast(ok ? '메뉴 카드를 저장했어요' : '이미지를 만들지 못했어요');
   }
 
   function retry() {
@@ -349,6 +393,7 @@ const Game = (() => {
     Records.clearAll();
     View.closeSheets();
     View.toast('기록을 지웠어요');
+    if (S.phase === 'home') home();
   }
   function editNick() { View.openNick(Records.ensureNick().nick); }
   function saveNick(name) {
@@ -356,25 +401,23 @@ const Game = (() => {
     if (err) { View.nickError(err); return; }
     View.closeNick();
     View.toast('닉네임을 바꿨어요');
-    const nick = Records.nickText();
-    if (S.phase === 'home') View.renderHome({ plays: plays(), nick });
+    if (S.phase === 'home') home();
     if (S.phase === 'result') View.renderResult(resultData());
     if (document.getElementById('board').classList.contains('open')) openBoard();
   }
   function resetPlays() {
     Store.remove('plays');
     View.toast('오늘 판 수를 다시 채웠어요');
-    View.renderHome({ plays: plays(), nick: Records.nickText() });
+    home();
   }
 
   function init() {
     View.init(api);
-    Share.preload();
     home();
   }
 
   const api = {
-    start, tap, quit, pause, resume, continueRun, giveUp, revealDinner, shareResult, saveImage, retry, home,
+    start, tap, quit, pause, resume, continueRun, giveUp, shareResult, saveImage, retry, home,
     openBoard, openHistory, clearHistory, editNick, saveNick, resetPlays,
     get state() { return S; } // 개발자 도구에서 확인용
   };

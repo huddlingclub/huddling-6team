@@ -9,7 +9,7 @@ Claude Code가 이 레포에서 작업할 때 따르는 규칙입니다. 사람 
 ## 기술 원칙 (기획서 7장)
 - 빌드 도구, 프레임워크, npm 패키지를 쓰지 않습니다. 순수 HTML/CSS/JavaScript, `<script>` 태그로 불러옵니다.
 - 화면은 DOM(버튼, 글자)으로 만듭니다. `<canvas>`는 결과 카드 이미지 저장에만 씁니다.
-- 외부 라이브러리 예외는 두 가지뿐입니다: 카카오 JavaScript SDK, 리더보드 서버(fetch 우선).
+- 외부 라이브러리 예외는 리더보드 서버(fetch 우선) 하나뿐입니다. 공유는 브라우저 기본 기능(모바일 공유 바텀시트, PC 링크 복사)으로 하고 카카오 SDK는 쓰지 않습니다.
 - 숫자(탭 수, 시간, 점수, 횟수 등)는 `src/config.js`에만 둡니다. 다른 파일에 숫자를 하드코딩하지 않습니다.
 - 로직과 겉모습을 분리합니다. `game.js`는 상태만 바꾸고, 보이는 모습은 CSS 클래스와 `src/assets/images/`의 그래픽이 정합니다.
 - 그래픽 파일이 없으면 이름 글자로 대체 표시합니다(로딩 실패로 화면이 깨지면 안 됨).
@@ -17,7 +17,7 @@ Claude Code가 이 레포에서 작업할 때 따르는 규칙입니다. 사람 
 
 ## 비밀 값
 - `src/secrets.js`는 절대 커밋하지 않습니다(.gitignore 처리됨). 새 키가 필요하면 `src/secrets.example.js`에 빈 항목을 추가합니다.
-- 키가 비어 있어도 게임이 동작해야 합니다(카카오 대신 기기 공유/링크 복사, 서버 대신 localStorage).
+- 키가 비어 있어도 게임이 동작해야 합니다(서버 대신 localStorage).
 
 ## 작업 방식
 - `main`에 직접 커밋하지 않습니다. `feature/…`, `fix/…`, `design/…` 브랜치에서 작업하고 PR을 올립니다.
@@ -31,7 +31,7 @@ src/config.js           모든 숫자와 문구 데이터
 src/style.css           공통 스타일 (:root 변수)
 src/game.js             게임 상태: 레벨, 단계, 점수, 타이머
 src/view.js             상태 → 화면 반영, 그래픽 로딩
-src/share.js            이미지 저장, 카카오톡 공유
+src/share.js            메뉴 카드 이미지 저장, 친구에게 공유
 src/leaderboard.js      기록 저장, 리더보드
 src/secrets.example.js  비밀 값 예시 (복사해서 secrets.js로)
 src/assets/images/      그래픽

@@ -27,13 +27,11 @@ jobs:
 
       - name: Write src/secrets.js from repository secrets
         env:
-          KAKAO_JS_KEY: ${{ secrets.KAKAO_JS_KEY }}
           LEADERBOARD_URL: ${{ secrets.LEADERBOARD_URL }}
           LEADERBOARD_ANON_KEY: ${{ secrets.LEADERBOARD_ANON_KEY }}
         run: |
           cat > src/secrets.js <<JS
           const SECRETS = {
-            KAKAO_JS_KEY: '${KAKAO_JS_KEY}',
             LEADERBOARD_URL: '${LEADERBOARD_URL}',
             LEADERBOARD_ANON_KEY: '${LEADERBOARD_ANON_KEY}'
           };

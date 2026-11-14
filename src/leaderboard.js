@@ -96,10 +96,27 @@ const Records = (() => {
   /* ---------- 리더보드 (기획서 5-1) ----------
    * 기기 기록만 있을 때는 이 기기의 판 기록을 점수순으로 보여 줌.
    * 동점이면 먼저 기록한 판이 위. 0점은 올리지 않음. */
+  /* 이론상 최고점 (기획서 3-5): config 값으로 계산.
+   * 매번 크리티컬(tapValue탭)이 터지고 초당 maxTapsPerSecond번, 최대 콤보 배수일 때 */
+  function maxPossible() {
+    const K = C.CRITICAL, rate = C.ANTI_MACRO.maxTapsPerSecond;
+    const topMult = Math.max(...C.COMBO.tiers.map(t => t.mult));
+    return C.LEVELS.reduce((sum, lv) => {
+      const hits = Math.ceil(lv.taps / K.tapValue);
+      const speed = lv.taps / (hits / rate);
+      return sum + speed * C.SCORE.perLevelBase * lv.level * topMult + hits * K.bonusPerLevel * lv.level;
+    }, C.SCORE.allClearBonus);
+  }
+
   function ranked(month) {
+    const max = maxPossible();
     return all()
-      .filter(r => r.month === month && (!C.LEADERBOARD.hideZeroScore || r.score > 0))
+      .filter(r => r.month === month && (!C.LEADERBOARD.hideZeroScore || r.score > 0) && r.score <= max)
       .sort((a, b) => b.score - a.score || a.at - b.at);
+  }
+  /* 리더보드에 보여 줄 기록이 하나라도 있는지 (없으면 리더보드 버튼을 숨김, 기획서 5-1) */
+  function hasBoard(ts) {
+    return ranked(monthKey(ts)).length > 0 || ranked(prevMonthKey(ts)).length > 0;
   }
   function rankOf(rec) {
     const i = ranked(rec.month).findIndex(r => r.id === rec.id);
@@ -124,5 +141,5 @@ const Records = (() => {
     return days.map(d => ({ day: d, runs: list.filter(r => r.day === d).sort((a, b) => b.at - a.at) }));
   }
 
-  return { dayKey, monthKey, nick, nickText, ensureNick, checkNickName, setNickName, add, update, clearAll, rankOf, board, recent };
+  return { dayKey, monthKey, nick, nickText, ensureNick, checkNickName, setNickName, add, update, clearAll, rankOf, board, recent, hasBoard, maxPossible };
 })();

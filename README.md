@@ -20,7 +20,7 @@ python3 -m http.server 8000
 VS Code를 쓴다면 "Live Server" 확장으로 `index.html`을 열어도 됩니다.
 모바일 화면은 브라우저 개발자 도구(F12)의 기기 모드로 확인하세요.
 
-## 비밀 값 설정 (카카오 키, 서버 주소)
+## 비밀 값 설정 (리더보드 서버 주소)
 
 앱 키와 서버 주소는 **커밋하지 않습니다.**
 
@@ -30,7 +30,7 @@ cp src/secrets.example.js src/secrets.js
 ```
 
 값은 담당자에게 팀 채팅으로 받으세요. 비어 있어도 게임은 돌아가야 합니다
-(카카오 공유 대신 기기 공유 창/링크 복사, 리더보드는 내 브라우저 기록).
+(리더보드는 내 브라우저 기록). 공유는 키 없이 모바일 공유 바텀시트 / PC 링크 복사로 동작합니다.
 
 ## 폴더 구조
 
@@ -41,7 +41,7 @@ src/
   style.css             공통 스타일 (색·글꼴은 :root 변수)
   game.js               게임 상태: 레벨, 단계, 점수, 타이머, 하루 판 수
   view.js               상태 → 화면 반영, 그래픽 불러오기, 입력(터치·스페이스바), 효과음
-  share.js              카카오톡/기기 공유, 결과 카드 이미지 저장
+  share.js              친구에게 공유(모바일 바텀시트 / PC 링크 복사), 메뉴 카드 이미지 저장
   leaderboard.js        기록 저장, 닉네임, 리더보드 (지금은 이 기기 localStorage)
   secrets.example.js    비밀 값 예시
   assets/images/        그래픽 (파일 이름 규칙은 그래픽 목록 참고)
@@ -65,7 +65,7 @@ CLAUDE.md               Claude Code 작업 규칙
 | 그래픽 제작·적용 | `src/assets/images/` |
 | 메뉴 카드·카피 | `src/config.js`의 `MENU_GROUPS` |
 | 리더보드·닉네임(서버) | `src/leaderboard.js` |
-| 이미지 저장·카카오톡 공유 | `src/share.js` |
+| 이미지 저장·공유 | `src/share.js` |
 | 발표 자료·시연 시나리오 | `docs/` |
 
 ## 협업 규칙
@@ -89,9 +89,8 @@ CLAUDE.md               Claude Code 작업 규칙
 
 1. 레포 **Settings → Pages → Source**를 **GitHub Actions**로 바꾸기
 2. 레포 **Settings → Secrets and variables → Actions**에 아래 값 등록 (없으면 비워 둬도 배포됨)
-   - `KAKAO_JS_KEY`, `LEADERBOARD_URL`, `LEADERBOARD_ANON_KEY`
+   - `LEADERBOARD_URL`, `LEADERBOARD_ANON_KEY`
 3. 배포 주소: `https://huddlingclub.github.io/huddling-6team/`
-4. 카카오 개발자 사이트의 **플랫폼 → Web 사이트 도메인**에 위 주소와 `http://localhost:8000`을 등록
 
 > 배포할 때만 Actions가 비밀 값으로 `src/secrets.js`를 만들어 넣습니다. 레포에는 남지 않습니다.
-> 참고로 카카오 JavaScript 키는 브라우저에서 쓰는 공개용 키라 배포된 페이지에서는 보일 수 있습니다. 대신 등록한 도메인에서만 동작합니다.
+> 리더보드 공개용(anon) 키는 배포된 페이지에서 보일 수 있습니다. 관리자 키는 절대 넣지 마세요.
