@@ -39,6 +39,10 @@ index.html              화면 뼈대
 src/
   config.js             ★ 모든 숫자·메뉴·문구 (기획서 숫자는 여기서만 고침)
   style.css             공통 스타일 (색·글꼴은 :root 변수)
+  game.js               게임 상태: 레벨, 단계, 점수, 타이머, 하루 판 수
+  view.js               상태 → 화면 반영, 그래픽 불러오기, 입력(터치·스페이스바), 효과음
+  share.js              카카오톡/기기 공유, 결과 카드 이미지 저장
+  leaderboard.js        기록 저장, 닉네임, 리더보드 (지금은 이 기기 localStorage)
   secrets.example.js    비밀 값 예시
   assets/images/        그래픽 (파일 이름 규칙은 그래픽 목록 참고)
   assets/sounds/        효과음
@@ -49,7 +53,8 @@ docs/
 CLAUDE.md               Claude Code 작업 규칙
 ```
 
-`game.js`(게임 로직), `view.js`(화면), `share.js`(저장·공유), `leaderboard.js`(기록)는 담당자가 PR로 추가합니다.
+그래픽 파일이 아직 없으면 `index.html` 안의 임시 그래픽(`<symbol>`)이 보이고, `src/assets/images/`에 같은 이름의 파일을 넣으면 자동으로 바뀝니다.
+그래서 개발자 도구 콘솔에 그래픽·효과음 파일 404가 보이는 건 정상입니다.
 
 ## 누가 어디를 고치나요?
 

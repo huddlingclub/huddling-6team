@@ -2,32 +2,496 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F7F0E3">
 <title>오늘도 다짐</title>
+<!-- 제목 폰트(Jua). 인터넷이 없으면 기본 폰트로 보입니다. -->
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="src/style.css">
 </head>
 <body>
-<!--
-  임시 시작 화면입니다. 게임 화면 작업이 PR로 들어오면 이 파일을 교체해 주세요.
-  지금은 config.js가 잘 읽히는지만 확인합니다.
--->
-<main class="placeholder">
-  <h1>오늘도 다짐</h1>
-  <p>퇴근길에 쌓인 화를 마늘에 풀고, 끝까지 다진 만큼 오늘의 저녁 메뉴를 받는 게임</p>
-  <ol id="levels"></ol>
-  <p class="note">준비 중 · 설정값은 <code>src/config.js</code></p>
+
+<!-- 그래픽 임시 버전. src/assets/images/ 에 같은 이름의 파일이 생기면 자동으로 대체됩니다.
+     symbol마다 viewBox가 있어야 크기에 맞게 늘어납니다. 새 symbol을 넣을 때도 viewBox를 적어 주세요. -->
+<svg class="sprite" aria-hidden="true">
+  <defs>
+    <radialGradient id="gBody" cx=".38" cy=".38" r=".78"><stop offset="0" stop-color="#FFFEF9"/><stop offset=".55" stop-color="#F8EEDB"/><stop offset="1" stop-color="#E2CDA6"/></radialGradient>
+    <radialGradient id="gClove" cx=".38" cy=".35" r=".8"><stop offset="0" stop-color="#FFFEF8"/><stop offset=".6" stop-color="#F7EBD2"/><stop offset="1" stop-color="#E0C99D"/></radialGradient>
+    <radialGradient id="gMince" cx=".45" cy=".3" r=".8"><stop offset="0" stop-color="#FFF8E0"/><stop offset=".6" stop-color="#F5E3B0"/><stop offset="1" stop-color="#E2C47F"/></radialGradient>
+    <linearGradient id="gFoot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F1E6CD"/><stop offset="1" stop-color="#D9C6A0"/></linearGradient>
+    <linearGradient id="gLeaf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9FC671"/><stop offset="1" stop-color="#7AA24E"/></linearGradient>
+    <linearGradient id="gBlade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F5F7F9"/><stop offset=".55" stop-color="#C8CED5"/><stop offset="1" stop-color="#99A1AA"/></linearGradient>
+    <linearGradient id="gHandle" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8E5E3F"/><stop offset="1" stop-color="#5A3824"/></linearGradient>
+    <linearGradient id="gWood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#EDC696"/><stop offset="1" stop-color="#D49D63"/></linearGradient>
+    <linearGradient id="gStone" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8B9198"/><stop offset=".35" stop-color="#B5BAC0"/><stop offset="1" stop-color="#7A8087"/></linearGradient>
+    <linearGradient id="gStoneIn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5A5F65"/><stop offset="1" stop-color="#80868D"/></linearGradient>
+    <linearGradient id="gPestle" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9AA0A7"/><stop offset=".4" stop-color="#C9CDD2"/><stop offset="1" stop-color="#848B92"/></linearGradient>
+    <linearGradient id="gSkin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FADDC6"/><stop offset="1" stop-color="#E8B08F"/></linearGradient>
+    <linearGradient id="gGreen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A3C976"/><stop offset="1" stop-color="#7EA552"/></linearGradient>
+    <linearGradient id="gLav" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D7C3EE"/><stop offset="1" stop-color="#AF92D6"/></linearGradient>
+    <linearGradient id="gPot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4B3328"/><stop offset="1" stop-color="#2A1B15"/></linearGradient>
+    <radialGradient id="gStew" cx=".5" cy=".4" r=".7"><stop offset="0" stop-color="#E06A3C"/><stop offset="1" stop-color="#A93A1E"/></radialGradient>
+    <radialGradient id="gPlate" cx=".5" cy=".4" r=".7"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E9E2D6"/></radialGradient>
+    <linearGradient id="gBread" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F8DFA6"/><stop offset="1" stop-color="#EBC27A"/></linearGradient>
+    <radialGradient id="gRice" cx=".45" cy=".35" r=".7"><stop offset="0" stop-color="#FBE7A9"/><stop offset="1" stop-color="#E2B866"/></radialGradient>
+    <radialGradient id="gFried" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="#F2B256"/><stop offset=".7" stop-color="#C9742C"/><stop offset="1" stop-color="#9A5220"/></radialGradient>
+    <linearGradient id="gPan" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3B3634"/><stop offset="1" stop-color="#1F1B1A"/></linearGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="4"/></filter>
+    <path id="clovePath" d="M50 5 C 56 22, 78 40, 85 66 C 91 92, 75 114, 50 114 C 25 114, 9 92, 15 66 C 22 40, 44 22, 50 5 Z"/>
+    <clipPath id="cutL"><rect x="0" y="0" width="50" height="120"/></clipPath>
+    <clipPath id="cutR"><rect x="50" y="0" width="50" height="120"/></clipPath>
+  </defs>
+
+  <!-- 마스코트 마늘이 (200x230) -->
+  <symbol id="sym-mascot" viewBox="0 0 200 230">
+    <ellipse cx="78" cy="208" rx="15" ry="10" fill="url(#gFoot)"/><ellipse cx="122" cy="208" rx="15" ry="10" fill="url(#gFoot)"/>
+    <path d="M100 64 C 99 46, 90 30, 80 14" stroke="url(#gLeaf)" stroke-width="19" stroke-linecap="round" fill="none"/>
+    <path d="M100 64 C 103 44, 112 28, 124 10" stroke="url(#gLeaf)" stroke-width="19" stroke-linecap="round" fill="none"/>
+    <path d="M90 50 C 87 38, 84 30, 80 22" stroke="#B9D88E" stroke-width="5" stroke-linecap="round" fill="none" opacity=".7"/>
+    <path d="M108 46 C 111 36, 115 28, 121 20" stroke="#B9D88E" stroke-width="5" stroke-linecap="round" fill="none" opacity=".7"/>
+    <path d="M100 58 C 92 74, 66 84, 50 100 C 30 120, 26 150, 34 172 C 42 194, 66 207, 88 203 C 94 202, 98 199, 100 196 C 102 199, 106 202, 112 203 C 134 207, 158 194, 166 172 C 174 150, 170 120, 150 100 C 134 84, 108 74, 100 58 Z" fill="url(#gBody)"/>
+    <path d="M88 66 Q100 76 112 66 L107 56 Q100 60 93 56 Z" fill="#F1E4C8"/>
+    <path d="M64 108 C 50 132, 48 164, 60 188" stroke="#E6D4B1" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".8"/>
+    <path d="M136 108 C 150 132, 152 164, 140 188" stroke="#E6D4B1" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".8"/>
+    <path d="M100 162 C 99 176, 99 188, 100 196" stroke="#D5BE95" stroke-width="3" fill="none" stroke-linecap="round" opacity=".75"/>
+    <ellipse cx="70" cy="120" rx="13" ry="24" fill="#fff" opacity=".6" transform="rotate(-18 70 120)" filter="url(#soft)"/>
+    <ellipse cx="66" cy="153" rx="11" ry="6.5" fill="#F4A6A6" opacity=".75"/><ellipse cx="134" cy="153" rx="11" ry="6.5" fill="#F4A6A6" opacity=".75"/>
+    <circle cx="80" cy="139" r="6.6" fill="#2A211C"/><circle cx="120" cy="139" r="6.6" fill="#2A211C"/>
+    <circle cx="82.2" cy="136.6" r="1.9" fill="#fff"/><circle cx="122.2" cy="136.6" r="1.9" fill="#fff"/>
+    <path d="M93.5 151 Q100 156.5 106.5 151" stroke="#2A211C" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="sym-spark" viewBox="0 0 60 30">
+    <path d="M15 25 L8 13" stroke="#8DB360" stroke-width="5.5" stroke-linecap="round"/><path d="M30 22 L30 5" stroke="#8DB360" stroke-width="5.5" stroke-linecap="round"/><path d="M45 25 L52 13" stroke="#8DB360" stroke-width="5.5" stroke-linecap="round"/>
+  </symbol>
+
+  <!-- 마늘 단계 0~4 (120x120): 통마늘 → 반 토막 → 굵게 → 곱게 → 다진 마늘 완성 -->
+  <symbol id="sym-g0" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="114" rx="30" ry="5" fill="#000" opacity=".12"/>
+    <g transform="translate(10 0)">
+      <use href="#clovePath" fill="url(#gClove)"/>
+      <path d="M37 42 C 29 62, 29 86, 37 104" stroke="#E7D6B4" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M64 46 C 70 64, 70 86, 64 102" stroke="#E7D6B4" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="36" cy="66" rx="7" ry="15" fill="#fff" opacity=".7" filter="url(#soft)"/>
+    </g>
+  </symbol>
+  <symbol id="sym-g1" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="114" rx="40" ry="5" fill="#000" opacity=".12"/>
+    <g transform="translate(2 4) rotate(-12 60 112)"><g transform="translate(10 0)" clip-path="url(#cutL)">
+      <use href="#clovePath" fill="url(#gClove)"/><path d="M50 6 L50 114" stroke="#FFFCEF" stroke-width="7"/><ellipse cx="36" cy="66" rx="7" ry="15" fill="#fff" opacity=".7" filter="url(#soft)"/>
+    </g></g>
+    <g transform="translate(-2 4) rotate(12 60 112)"><g transform="translate(10 0)" clip-path="url(#cutR)">
+      <use href="#clovePath" fill="url(#gClove)"/><path d="M50 6 L50 114" stroke="#FFFCEF" stroke-width="7"/>
+    </g></g>
+  </symbol>
+  <symbol id="sym-g2" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="112" rx="44" ry="6" fill="#000" opacity=".12"/>
+    <g fill="url(#gClove)" stroke="#E3CFA6" stroke-width="1.2">
+      <path d="M26 104 l6 -16 l14 -2 l6 12 l-6 10 l-16 2 z"/>
+      <path d="M50 108 l2 -18 l16 -6 l10 12 l-4 12 l-18 2 z"/>
+      <path d="M78 106 l4 -14 l14 -2 l8 10 l-4 10 l-16 2 z"/>
+      <path d="M38 86 l8 -14 l14 0 l4 12 l-10 8 l-12 -2 z"/>
+      <path d="M64 84 l6 -12 l14 2 l2 12 l-10 6 l-10 -2 z"/>
+      <path d="M50 70 l8 -10 l12 2 l0 10 l-10 4 z"/>
+    </g>
+    <g fill="#FFFCEF" opacity=".9"><path d="M30 100 l4 -8 l8 -1 l3 6 z"/><path d="M56 102 l2 -9 l8 -3 l5 6 z"/><path d="M68 80 l4 -6 l7 1 z"/></g>
+  </symbol>
+  <symbol id="sym-g3" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="112" rx="46" ry="6" fill="#000" opacity=".12"/>
+    <g fill="url(#gClove)" stroke="#E3CFA6" stroke-width="1">
+      <ellipse cx="26" cy="104" rx="5" ry="4"/><ellipse cx="36" cy="108" rx="6" ry="4"/><ellipse cx="34" cy="98" rx="5" ry="4"/><ellipse cx="46" cy="104" rx="6" ry="4.5"/>
+      <ellipse cx="44" cy="94" rx="5" ry="4"/><ellipse cx="56" cy="108" rx="6" ry="4"/><ellipse cx="56" cy="98" rx="6" ry="4.5"/><ellipse cx="54" cy="88" rx="5" ry="4"/>
+      <ellipse cx="66" cy="104" rx="6" ry="4.5"/><ellipse cx="66" cy="93" rx="5" ry="4"/><ellipse cx="64" cy="83" rx="4.5" ry="3.5"/><ellipse cx="76" cy="108" rx="6" ry="4"/>
+      <ellipse cx="76" cy="98" rx="6" ry="4.5"/><ellipse cx="74" cy="88" rx="5" ry="4"/><ellipse cx="86" cy="104" rx="6" ry="4.5"/><ellipse cx="86" cy="94" rx="5" ry="4"/>
+      <ellipse cx="96" cy="106" rx="5" ry="4"/><ellipse cx="94" cy="98" rx="4" ry="3"/><ellipse cx="60" cy="76" rx="4" ry="3"/>
+    </g>
+  </symbol>
+  <symbol id="sym-g4" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="112" rx="46" ry="6" fill="#000" opacity=".14"/>
+    <path d="M16 110 C 18 86, 40 66, 60 66 C 80 66, 102 86, 104 110 Z" fill="url(#gMince)"/>
+    <g fill="#FFF9E4"><circle cx="40" cy="96" r="3"/><circle cx="52" cy="84" r="2.6"/><circle cx="64" cy="78" r="3"/><circle cx="76" cy="88" r="2.6"/><circle cx="86" cy="100" r="3"/><circle cx="56" cy="98" r="2.4"/><circle cx="70" cy="100" r="3"/><circle cx="30" cy="106" r="2.4"/><circle cx="94" cy="107" r="2.4"/><circle cx="62" cy="90" r="2"/></g>
+    <g fill="#E3C98F"><circle cx="48" cy="92" r="2"/><circle cx="72" cy="94" r="2"/><circle cx="60" cy="104" r="2"/><circle cx="84" cy="92" r="2"/><circle cx="38" cy="104" r="2"/><circle cx="78" cy="106" r="2"/></g>
+    <ellipse cx="46" cy="80" rx="8" ry="5" fill="#fff" opacity=".6" filter="url(#soft)"/>
+    <g fill="#8DB360"><path d="M58 52 l2 -8 l2 8 z"/><path d="M46 58 l-6 -6 l8 2 z"/><path d="M72 58 l6 -6 l-8 2 z"/></g>
+  </symbol>
+
+  <!-- 맨주먹 (120x110) — 소매 달린 직장인 주먹 -->
+  <symbol id="sym-fist" viewBox="0 0 120 110">
+    <rect x="34" y="0" width="52" height="22" rx="8" fill="#9CBEE0"/><rect x="34" y="14" width="52" height="8" rx="4" fill="#86A9CC"/>
+    <rect x="12" y="16" width="96" height="66" rx="28" fill="url(#gSkin)"/>
+    <g fill="url(#gSkin)" stroke="#D99B79" stroke-width="2"><rect x="14" y="66" width="24" height="34" rx="12"/><rect x="37" y="68" width="24" height="36" rx="12"/><rect x="60" y="68" width="24" height="36" rx="12"/><rect x="83" y="66" width="24" height="33" rx="12"/></g>
+    <path d="M30 56 C 46 46, 80 44, 100 52" stroke="#D99B79" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <ellipse cx="66" cy="50" rx="30" ry="11" fill="#F6C9AA" transform="rotate(-6 66 50)"/>
+    <ellipse cx="34" cy="34" rx="12" ry="7" fill="#fff" opacity=".45" filter="url(#soft)"/>
+  </symbol>
+  <!-- 칼 (240x90) -->
+  <symbol id="sym-knife" viewBox="0 0 240 90">
+    <path d="M150 22 L150 70 L44 70 C 26 70, 12 64, 4 56 C 40 44, 96 30, 150 22 Z" fill="url(#gBlade)"/>
+    <path d="M10 58 C 40 66, 100 68, 148 67" stroke="#fff" stroke-width="2" fill="none" opacity=".6"/>
+    <path d="M20 50 C 60 40, 110 30, 148 26" stroke="#fff" stroke-width="3" fill="none" opacity=".45"/>
+    <rect x="146" y="20" width="13" height="52" rx="4" fill="#B6BDC5"/>
+    <rect x="156" y="26" width="80" height="40" rx="18" fill="url(#gHandle)"/><rect x="164" y="31" width="62" height="7" rx="3.5" fill="#fff" opacity=".18"/>
+    <circle cx="180" cy="47" r="5" fill="#EDE5DA"/><circle cx="214" cy="47" r="5" fill="#EDE5DA"/>
+  </symbol>
+  <!-- 도마 (320x200) -->
+  <symbol id="sym-board" viewBox="0 0 320 200">
+    <rect x="8" y="34" width="282" height="160" rx="28" fill="#B47A44"/>
+    <path d="M270 100 h28 a20 20 0 0 1 0 44 h-28 z" fill="#B47A44"/>
+    <rect x="8" y="20" width="282" height="164" rx="28" fill="url(#gWood)"/>
+    <path d="M270 82 h28 a22 22 0 0 1 0 44 h-28 z" fill="#DCA86F"/><circle cx="299" cy="104" r="8" fill="#9E6838"/>
+    <path d="M40 60 C 90 52, 150 70, 250 58" stroke="#C48A52" stroke-width="2.5" fill="none" opacity=".35" stroke-linecap="round"/>
+    <path d="M36 110 C 100 100, 170 122, 258 104" stroke="#C48A52" stroke-width="2.5" fill="none" opacity=".3" stroke-linecap="round"/>
+    <path d="M50 150 C 110 142, 180 160, 250 146" stroke="#C48A52" stroke-width="2.5" fill="none" opacity=".3" stroke-linecap="round"/>
+    <rect x="20" y="26" width="250" height="10" rx="5" fill="#fff" opacity=".22"/>
+  </symbol>
+  <!-- 절구 (260x200) / 절굿공이 (70x200) -->
+  <symbol id="sym-mortar-back" viewBox="0 0 260 200"><ellipse cx="130" cy="50" rx="120" ry="33" fill="#B9BEC3"/><ellipse cx="130" cy="50" rx="106" ry="26" fill="url(#gStoneIn)"/></symbol>
+  <symbol id="sym-mortar-front" viewBox="0 0 260 200">
+    <ellipse cx="130" cy="180" rx="74" ry="13" fill="#6C7177"/>
+    <path d="M10 50 L24 50 A106 26 0 0 0 236 50 L250 50 C 248 100, 236 140, 214 160 C 186 184, 74 184, 46 160 C 24 140, 12 100, 10 50 Z" fill="url(#gStone)"/>
+    <path d="M10 50 A120 33 0 0 0 250 50" stroke="#CDD1D5" stroke-width="2.5" fill="none"/>
+    <path d="M40 92 C 48 126, 64 148, 86 160" stroke="#fff" stroke-width="5" fill="none" opacity=".25" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="sym-pestle" viewBox="0 0 70 200">
+    <path d="M23 12 C 23 2, 47 2, 47 12 L 49 118 C 62 138, 64 168, 54 186 C 46 199, 24 199, 16 186 C 6 168, 8 138, 21 118 Z" fill="url(#gPestle)"/>
+    <path d="M30 20 L 30 112" stroke="#fff" stroke-width="4" opacity=".35" stroke-linecap="round"/>
+  </symbol>
+  <!-- 수동 믹서기 (200x200): 유리 볼 + 손잡이 달린 뚜껑 -->
+  <symbol id="sym-chop-back" viewBox="0 0 200 200">
+    <ellipse cx="100" cy="190" rx="66" ry="7" fill="#000" opacity=".1"/>
+    <path d="M28 92 C 28 160, 50 186, 100 186 C 150 186, 172 160, 172 92 Z" fill="#E4EFF4" fill-opacity=".75" stroke="#BFD3DD" stroke-width="3"/>
+    <ellipse cx="100" cy="176" rx="52" ry="8" fill="#8FA9B8" opacity=".18"/>
+    <rect x="96" y="82" width="8" height="92" rx="4" fill="#C9D2D9"/>
+    <path d="M58 150 Q100 136 142 150" stroke="#A9B3BC" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <path d="M68 122 Q100 132 132 118" stroke="#A9B3BC" stroke-width="6" fill="none" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="sym-chop-front" viewBox="0 0 200 200">
+    <path d="M28 92 C 28 160, 50 186, 100 186 C 150 186, 172 160, 172 92 Z" fill="#EAF4F8" fill-opacity=".18"/>
+    <path d="M42 104 C 42 144, 52 166, 72 178" stroke="#fff" stroke-width="6" fill="none" opacity=".6" stroke-linecap="round"/>
+    <ellipse cx="100" cy="92" rx="72" ry="9" fill="none" stroke="#CFE0E8" stroke-width="4"/>
+  </symbol>
+  <symbol id="sym-chop-lid" viewBox="0 0 200 200">
+    <rect x="22" y="70" width="156" height="24" rx="12" fill="url(#gGreen)"/>
+    <rect x="30" y="74" width="120" height="5" rx="2.5" fill="#fff" opacity=".3"/>
+    <rect x="62" y="56" width="76" height="18" rx="9" fill="#A9CB7A"/>
+    <path d="M100 60 L150 34" stroke="#6E9446" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="153" cy="31" r="11" fill="#F6EBD0" stroke="#D9C6A0" stroke-width="2"/>
+  </symbol>
+  <!-- 자동 믹서기 (200x240): 유리 용기 + 모터 받침 + 뚜껑 -->
+  <symbol id="sym-blend-back" viewBox="0 0 200 240">
+    <ellipse cx="100" cy="234" rx="70" ry="6" fill="#000" opacity=".1"/>
+    <path d="M48 44 L152 44 L140 178 L60 178 Z" fill="#E4EFF4" fill-opacity=".75" stroke="#BFD3DD" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M72 170 L128 164" stroke="#9AA4AD" stroke-width="6" stroke-linecap="round"/><path d="M76 160 L124 172" stroke="#9AA4AD" stroke-width="6" stroke-linecap="round"/>
+    <rect x="92" y="164" width="16" height="14" rx="3" fill="#B6BDC5"/>
+    <path d="M44 178 L156 178 L168 230 L32 230 Z" fill="url(#gLav)" stroke="#9E80C8" stroke-width="2" stroke-linejoin="round"/>
+    <circle cx="100" cy="204" r="13" fill="#FFFBF3" stroke="#9E80C8" stroke-width="3"/><path d="M100 194 L100 204" stroke="#9E80C8" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="62" cy="204" r="5" fill="#F4A6A6"/><circle cx="138" cy="204" r="5" fill="#8DB360"/>
+  </symbol>
+  <symbol id="sym-blend-front" viewBox="0 0 200 240">
+    <path d="M48 44 L152 44 L140 178 L60 178 Z" fill="#EAF4F8" fill-opacity=".18"/>
+    <path d="M62 56 L68 166" stroke="#fff" stroke-width="6" opacity=".6" stroke-linecap="round"/>
+    <path d="M152 62 C 182 66, 182 140, 146 150" stroke="#BFD3DD" stroke-width="10" fill="none" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="sym-blend-lid" viewBox="0 0 200 240">
+    <rect x="42" y="30" width="116" height="18" rx="8" fill="url(#gGreen)"/>
+    <rect x="86" y="16" width="28" height="16" rx="6" fill="#A9CB7A"/>
+  </symbol>
+
+  <!-- 메뉴 (300x200) -->
+  <symbol id="sym-menu-toast" viewBox="0 0 300 200">
+    <ellipse cx="150" cy="172" rx="120" ry="16" fill="#000" opacity=".1"/>
+    <ellipse cx="150" cy="156" rx="120" ry="30" fill="#E2D9CA"/><ellipse cx="150" cy="152" rx="112" ry="26" fill="url(#gPlate)"/>
+    <g transform="rotate(-8 130 110)"><path d="M70 150 L70 84 C 70 56, 96 46, 130 46 C 164 46, 190 56, 190 84 L190 150 Z" fill="#B97A3C"/><path d="M80 144 L80 88 C 80 66, 102 58, 130 58 C 158 58, 180 66, 180 88 L180 144 Z" fill="url(#gBread)"/></g>
+    <g transform="rotate(6 190 120)"><path d="M120 156 L120 92 C 120 66, 144 56, 176 56 C 208 56, 232 66, 232 92 L232 156 Z" fill="#C0823F"/><path d="M130 150 L130 96 C 130 76, 150 68, 176 68 C 202 68, 222 76, 222 96 L222 150 Z" fill="url(#gBread)"/>
+      <path d="M138 104 C 150 84, 204 80, 214 104 L214 140 L138 140 Z" fill="#F6DE8C" opacity=".85"/>
+      <g fill="#FFF6D2"><circle cx="156" cy="110" r="3.5"/><circle cx="176" cy="102" r="3.5"/><circle cx="196" cy="114" r="3.5"/><circle cx="168" cy="126" r="3.5"/><circle cx="190" cy="132" r="3"/><circle cx="150" cy="132" r="3"/></g>
+      <g fill="#7FAE4E"><circle cx="164" cy="116" r="2.4"/><circle cx="186" cy="120" r="2.4"/><circle cx="202" cy="100" r="2.4"/><circle cx="158" cy="98" r="2.2"/></g></g>
+  </symbol>
+  <symbol id="sym-menu-pasta" viewBox="0 0 300 200">
+    <ellipse cx="150" cy="170" rx="122" ry="18" fill="#000" opacity=".1"/>
+    <ellipse cx="150" cy="150" rx="122" ry="34" fill="#E2D9CA"/><ellipse cx="150" cy="146" rx="114" ry="30" fill="url(#gPlate)"/>
+    <g fill="none" stroke="#EFCB6E" stroke-width="5" stroke-linecap="round">
+      <ellipse cx="150" cy="122" rx="66" ry="24"/><ellipse cx="146" cy="116" rx="52" ry="18"/><ellipse cx="154" cy="112" rx="40" ry="14"/><ellipse cx="150" cy="106" rx="26" ry="9"/>
+      <path d="M92 128 C 120 140, 180 140, 208 126"/><path d="M100 112 C 130 98, 176 98, 202 114"/>
+    </g>
+    <g stroke="#F7DB8E" stroke-width="2.5" fill="none" stroke-linecap="round"><path d="M110 120 C 130 128, 170 128, 190 118"/><path d="M120 108 C 140 100, 166 100, 182 108"/></g>
+    <g fill="#FFF6DA" stroke="#D9A64A" stroke-width="1.5"><ellipse cx="122" cy="110" rx="7" ry="5"/><ellipse cx="176" cy="104" rx="7" ry="5"/><ellipse cx="148" cy="128" rx="7" ry="5"/><ellipse cx="190" cy="124" rx="6" ry="4.5"/><ellipse cx="108" cy="126" rx="6" ry="4.5"/></g>
+    <g fill="#D9412A"><circle cx="136" cy="100" r="2.6"/><circle cx="166" cy="120" r="2.6"/><circle cx="200" cy="112" r="2.4"/><circle cx="116" cy="134" r="2.4"/></g>
+    <g fill="#7FAE4E"><circle cx="156" cy="96" r="2.6"/><circle cx="130" cy="122" r="2.6"/><circle cx="184" cy="132" r="2.4"/><circle cx="102" cy="116" r="2.4"/></g>
+  </symbol>
+  <symbol id="sym-menu-gamjatang" viewBox="0 0 300 200">
+    <ellipse cx="150" cy="178" rx="120" ry="14" fill="#000" opacity=".1"/>
+    <path d="M44 96 C 44 156, 84 176, 150 176 C 216 176, 256 156, 256 96 Z" fill="url(#gPot)"/>
+    <rect x="18" y="94" width="34" height="12" rx="6" fill="#2A1B15"/><rect x="248" y="94" width="34" height="12" rx="6" fill="#2A1B15"/>
+    <ellipse cx="150" cy="96" rx="106" ry="28" fill="#3A2820"/><ellipse cx="150" cy="98" rx="96" ry="23" fill="url(#gStew)"/>
+    <g fill="#C8692F" stroke="#8E3E18" stroke-width="2"><path d="M84 92 c 6 -12 30 -12 34 0 c 2 10 -30 14 -34 0 z"/><path d="M168 86 c 8 -10 32 -6 32 6 c -2 10 -30 10 -32 -6 z"/><path d="M128 104 c 6 -10 30 -8 32 2 c 0 10 -28 12 -32 -2 z"/></g>
+    <g fill="#FFF6E6" stroke="#E2CDA8" stroke-width="2"><path d="M96 78 h22 a6 6 0 1 1 0 8 h-22 a6 6 0 1 1 0 -8 z"/><path d="M180 108 h24 a6 6 0 1 1 0 8 h-24 a6 6 0 1 1 0 -8 z"/></g>
+    <g fill="#3A2418"><circle cx="122" cy="110" r="5"/><circle cx="196" cy="84" r="5"/><circle cx="84" cy="98" r="4.5"/></g>
+    <g fill="#4F7A3A" opacity=".9"><ellipse cx="154" cy="88" rx="14" ry="6" transform="rotate(-20 154 88)"/><ellipse cx="226" cy="100" rx="12" ry="5" transform="rotate(15 226 100)"/></g>
+    <g fill="#F4C966" stroke="#D59A35" stroke-width="1.5"><rect x="114" y="82" width="20" height="16" rx="5" transform="rotate(-10 124 90)"/><rect x="198" y="100" width="20" height="16" rx="5" transform="rotate(12 208 108)"/><rect x="70" y="102" width="18" height="14" rx="5"/></g>
+    <g fill="#F08A3C"><path d="M150 84 l14 4 l-4 8 z"/><path d="M220 90 l12 -2 l-2 8 z"/></g>
+    <g fill="#FFF3CC"><circle cx="104" cy="88" r="3"/><circle cx="112" cy="94" r="3"/><circle cx="182" cy="90" r="3"/><circle cx="190" cy="84" r="3"/><circle cx="146" cy="104" r="3"/><circle cx="160" cy="98" r="3"/><circle cx="96" cy="104" r="3"/></g>
+    <g fill="#7FAE4E"><circle cx="138" cy="92" r="3.4"/><circle cx="176" cy="104" r="3.4"/><circle cx="90" cy="96" r="3"/><circle cx="216" cy="94" r="3"/></g>
+    <path d="M118 64 c -8 -12 8 -18 0 -32" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" opacity=".5"><animate attributeName="opacity" values=".15;.6;.15" dur="2.4s" repeatCount="indefinite"/></path>
+    <path d="M150 60 c -8 -12 8 -18 0 -34" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" opacity=".5"><animate attributeName="opacity" values=".6;.15;.6" dur="2.4s" repeatCount="indefinite"/></path>
+    <path d="M182 64 c -8 -12 8 -18 0 -32" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" opacity=".5"><animate attributeName="opacity" values=".2;.55;.2" dur="2s" repeatCount="indefinite"/></path>
+  </symbol>
+  <symbol id="sym-menu-friedrice" viewBox="0 0 300 200">
+    <ellipse cx="150" cy="168" rx="122" ry="18" fill="#000" opacity=".1"/>
+    <ellipse cx="150" cy="150" rx="122" ry="34" fill="#E2D9CA"/><ellipse cx="150" cy="146" rx="114" ry="30" fill="url(#gPlate)"/>
+    <path d="M70 146 C 72 96, 112 74, 150 74 C 188 74, 228 96, 230 146 C 200 160, 100 160, 70 146 Z" fill="url(#gRice)"/>
+    <g fill="#FFF3CF" opacity=".9"><circle cx="104" cy="120" r="3"/><circle cx="124" cy="104" r="3"/><circle cx="182" cy="110" r="3"/><circle cx="204" cy="128" r="3"/><circle cx="160" cy="134" r="3"/><circle cx="96" cy="138" r="3"/></g>
+    <g fill="#D99A3E"><ellipse cx="114" cy="132" rx="7" ry="4.5"/><ellipse cx="196" cy="116" rx="7" ry="4.5"/><ellipse cx="140" cy="140" rx="6" ry="4"/><ellipse cx="214" cy="138" rx="6" ry="4"/></g>
+    <path d="M118 88 C 126 66, 176 64, 186 88 C 194 104, 172 112, 150 110 C 126 110, 110 104, 118 88 Z" fill="#FFFDF7"/>
+    <circle cx="154" cy="92" r="13" fill="#F6B53A"/><circle cx="150" cy="88" r="4" fill="#fff" opacity=".6"/>
+    <g fill="#7FAE4E"><circle cx="132" cy="112" r="3"/><circle cx="176" cy="118" r="3"/><circle cx="108" cy="110" r="2.6"/><circle cx="194" cy="100" r="2.6"/></g>
+  </symbol>
+  <symbol id="sym-menu-kimchi" viewBox="0 0 300 200">
+    <ellipse cx="150" cy="176" rx="104" ry="14" fill="#000" opacity=".1"/>
+    <path d="M60 92 C 60 160, 96 176, 150 176 C 204 176, 240 160, 240 92 Z" fill="url(#gPot)"/>
+    <ellipse cx="150" cy="92" rx="92" ry="26" fill="#3A2820"/><ellipse cx="150" cy="94" rx="82" ry="21" fill="url(#gStew)"/>
+    <rect x="104" y="82" width="26" height="20" rx="5" fill="#FBF6EA" transform="rotate(-8 117 92)"/><rect x="158" y="86" width="24" height="18" rx="5" fill="#FBF6EA" transform="rotate(10 170 95)"/>
+    <path d="M136 98 c 10 -8 22 -6 30 2" stroke="#F3C27A" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <path d="M190 84 c 8 4 14 10 12 18" stroke="#E8A07C" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <g fill="#7FAE4E"><circle cx="96" cy="96" r="4"/><circle cx="210" cy="98" r="4"/><circle cx="148" cy="80" r="3.5"/></g>
+    <g fill="#FFF3CC"><circle cx="124" cy="104" r="3"/><circle cx="196" cy="92" r="3"/><circle cx="160" cy="106" r="3"/></g>
+    <path d="M118 62 c -8 -12 8 -18 0 -32" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" opacity=".5"/><path d="M150 58 c -8 -12 8 -18 0 -34" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" opacity=".5"/><path d="M182 62 c -8 -12 8 -18 0 -32" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" opacity=".5"/>
+  </symbol>
+  <symbol id="sym-menu-gambas" viewBox="0 0 300 200">
+    <ellipse cx="150" cy="176" rx="118" ry="12" fill="#000" opacity=".1"/>
+    <rect x="232" y="104" width="62" height="16" rx="8" fill="#2A2523"/>
+    <ellipse cx="146" cy="120" rx="104" ry="50" fill="url(#gPan)"/><ellipse cx="146" cy="114" rx="92" ry="40" fill="#E5A93C"/><ellipse cx="146" cy="112" rx="80" ry="32" fill="#F2C35A" opacity=".7"/>
+    <g fill="none" stroke="#EE7F52" stroke-width="12" stroke-linecap="round"><path d="M92 112 c 0 -16 22 -20 28 -6"/><path d="M150 96 c 4 -16 28 -14 28 2"/><path d="M160 132 c -6 -14 14 -26 26 -14"/><path d="M110 138 c -4 -14 16 -22 26 -10"/></g>
+    <g fill="none" stroke="#FFC1A0" stroke-width="3" stroke-linecap="round"><path d="M96 108 c 2 -8 12 -10 18 -4"/><path d="M156 94 c 4 -8 14 -8 18 0"/></g>
+    <g fill="#FFF6DA" stroke="#D9A64A" stroke-width="1.5"><ellipse cx="130" cy="116" rx="8" ry="6"/><ellipse cx="196" cy="110" rx="8" ry="6"/><ellipse cx="88" cy="132" rx="7" ry="5"/><ellipse cx="146" cy="138" rx="7" ry="5"/><ellipse cx="200" cy="134" rx="7" ry="5"/></g>
+    <g fill="#C8321E"><circle cx="118" cy="100" r="3"/><circle cx="178" cy="124" r="3"/><circle cx="214" cy="118" r="2.6"/></g>
+    <g fill="#7FAE4E"><circle cx="140" cy="104" r="2.6"/><circle cx="176" cy="140" r="2.6"/><circle cx="104" cy="122" r="2.4"/></g>
+    <g transform="rotate(-12 40 160)"><rect x="14" y="140" width="56" height="34" rx="12" fill="#C7883F"/><rect x="18" y="144" width="48" height="26" rx="10" fill="#F2D49A"/></g>
+  </symbol>
+  <symbol id="sym-menu-samgyetang" viewBox="0 0 300 200">
+    <ellipse cx="150" cy="180" rx="110" ry="12" fill="#000" opacity=".1"/>
+    <path d="M56 96 C 56 156, 92 176, 150 176 C 208 176, 244 156, 244 96 Z" fill="url(#gPot)"/>
+    <ellipse cx="150" cy="96" rx="94" ry="26" fill="#3A2820"/><ellipse cx="150" cy="98" rx="84" ry="21" fill="#F3EAD4"/>
+    <path d="M104 104 C 102 74, 128 62, 150 64 C 176 64, 198 78, 196 102 C 180 114, 120 114, 104 104 Z" fill="#F7E6C8" stroke="#E2C79C" stroke-width="2"/>
+    <ellipse cx="118" cy="78" rx="13" ry="9" fill="#F1D9B4" stroke="#E2C79C" stroke-width="2" transform="rotate(-30 118 78)"/><ellipse cx="184" cy="78" rx="13" ry="9" fill="#F1D9B4" stroke="#E2C79C" stroke-width="2" transform="rotate(30 184 78)"/>
+    <ellipse cx="136" cy="86" rx="10" ry="5" fill="#fff" opacity=".6"/>
+    <g fill="#B8322A"><ellipse cx="92" cy="104" rx="7" ry="5"/><ellipse cx="210" cy="102" rx="7" ry="5"/></g>
+    <g fill="#FFFBEF" stroke="#E6D3AD" stroke-width="1.5"><ellipse cx="128" cy="108" rx="7" ry="5"/><ellipse cx="172" cy="110" rx="7" ry="5"/><ellipse cx="150" cy="114" rx="6" ry="4"/></g>
+    <g fill="#7FAE4E"><circle cx="106" cy="112" r="3"/><circle cx="196" cy="112" r="3"/><circle cx="150" cy="70" r="3"/></g>
+    <path d="M124 58 c -8 -12 8 -18 0 -32" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" opacity=".5"/><path d="M176 58 c -8 -12 8 -18 0 -32" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" opacity=".5"/>
+  </symbol>
+  <symbol id="sym-menu-tteokbokki" viewBox="0 0 300 200">
+    <ellipse cx="150" cy="172" rx="122" ry="16" fill="#000" opacity=".1"/>
+    <ellipse cx="150" cy="150" rx="122" ry="34" fill="#E2D9CA"/><ellipse cx="150" cy="146" rx="114" ry="30" fill="url(#gPlate)"/>
+    <path d="M62 140 C 66 104, 110 86, 150 86 C 190 86, 234 104, 238 140 C 204 162, 96 162, 62 140 Z" fill="#D9452B"/>
+    <g fill="#FFF1E2" stroke="#E9B9A0" stroke-width="2"><rect x="88" y="118" width="40" height="13" rx="6.5" transform="rotate(-12 108 124)"/><rect x="132" y="128" width="40" height="13" rx="6.5" transform="rotate(8 152 134)"/><rect x="176" y="114" width="40" height="13" rx="6.5" transform="rotate(-20 196 120)"/><rect x="104" y="100" width="38" height="12" rx="6" transform="rotate(14 123 106)"/><rect x="164" y="98" width="38" height="12" rx="6" transform="rotate(6 183 104)"/></g>
+    <g fill="#E9B97A"><path d="M140 108 l18 -8 l4 16 z"/><path d="M200 132 l16 -4 l-2 14 z"/></g>
+    <path d="M118 96 C 124 72, 176 70, 184 94 C 170 102, 132 102, 118 96 Z" fill="#F6E3A6"/>
+    <g fill="#FFF6D2"><circle cx="134" cy="88" r="4.5"/><circle cx="148" cy="82" r="4.5"/><circle cx="162" cy="80" r="4.5"/><circle cx="172" cy="88" r="4"/><circle cx="154" cy="90" r="4"/><circle cx="142" cy="94" r="3.5"/></g>
+    <g fill="#7FAE4E"><circle cx="126" cy="98" r="3"/><circle cx="178" cy="98" r="3"/><circle cx="96" cy="132" r="3"/><circle cx="214" cy="140" r="3"/></g>
+  </symbol>
+  <symbol id="sym-menu-bossam" viewBox="0 0 300 200">
+    <ellipse cx="150" cy="176" rx="124" ry="12" fill="#000" opacity=".1"/>
+    <rect x="26" y="70" width="248" height="104" rx="22" fill="#B47A44"/><rect x="26" y="62" width="248" height="104" rx="22" fill="url(#gWood)"/>
+    <g fill="#8DB360"><path d="M44 120 C 40 90, 70 76, 92 84 C 108 92, 104 140, 80 150 C 62 156, 46 144, 44 120 Z"/></g>
+    <g>
+      <g transform="rotate(-6 150 110)">
+        <rect x="104" y="84" width="20" height="62" rx="5" fill="#E7A79A"/><rect x="104" y="84" width="20" height="10" rx="4" fill="#FFF1E4"/><rect x="104" y="80" width="20" height="5" rx="2.5" fill="#8C5530"/>
+        <rect x="124" y="84" width="20" height="62" rx="5" fill="#E29C8E"/><rect x="124" y="84" width="20" height="10" rx="4" fill="#FFF1E4"/><rect x="124" y="80" width="20" height="5" rx="2.5" fill="#8C5530"/>
+        <rect x="144" y="84" width="20" height="62" rx="5" fill="#E7A79A"/><rect x="144" y="84" width="20" height="10" rx="4" fill="#FFF1E4"/><rect x="144" y="80" width="20" height="5" rx="2.5" fill="#8C5530"/>
+        <rect x="164" y="84" width="20" height="62" rx="5" fill="#E29C8E"/><rect x="164" y="84" width="20" height="10" rx="4" fill="#FFF1E4"/><rect x="164" y="80" width="20" height="5" rx="2.5" fill="#8C5530"/>
+      </g>
+    </g>
+    <path d="M200 140 C 196 112, 236 100, 256 118 C 262 136, 236 154, 214 152 Z" fill="#D9452B"/><g fill="#F4A07E"><circle cx="222" cy="124" r="4"/><circle cx="238" cy="132" r="4"/></g>
+    <ellipse cx="230" cy="88" rx="24" ry="13" fill="#FFFBF3" stroke="#E6D9C3" stroke-width="2"/>
+    <g fill="#FFF6DA" stroke="#D9A64A" stroke-width="1.2"><ellipse cx="222" cy="86" rx="6" ry="4"/><ellipse cx="236" cy="90" rx="6" ry="4"/><ellipse cx="232" cy="82" rx="5" ry="3.5"/></g>
+  </symbol>
+  <symbol id="sym-menu-chicken" viewBox="0 0 300 200">
+    <ellipse cx="150" cy="172" rx="122" ry="16" fill="#000" opacity=".1"/>
+    <ellipse cx="150" cy="150" rx="122" ry="34" fill="#E2D9CA"/><ellipse cx="150" cy="146" rx="114" ry="30" fill="url(#gPlate)"/>
+    <ellipse cx="96" cy="128" rx="22" ry="14" fill="url(#gFried)" transform="rotate(-25 96 128)"/><rect x="66" y="128" width="16" height="9" rx="4" fill="#FFF3E0" transform="rotate(-25 74 132)"/>
+    <ellipse cx="206" cy="128" rx="22" ry="14" fill="url(#gFried)" transform="rotate(25 206 128)"/><rect x="220" y="128" width="16" height="9" rx="4" fill="#FFF3E0" transform="rotate(25 228 132)"/>
+    <path d="M100 120 C 96 82, 126 64, 152 64 C 180 64, 206 82, 202 120 C 186 140, 116 140, 100 120 Z" fill="url(#gFried)"/>
+    <ellipse cx="132" cy="84" rx="14" ry="7" fill="#FFE2A8" opacity=".55"/>
+    <g fill="#F6D27A" stroke="#D9A64A" stroke-width="1.2"><ellipse cx="140" cy="76" rx="6" ry="4"/><ellipse cx="160" cy="72" rx="6" ry="4"/><ellipse cx="176" cy="82" rx="6" ry="4"/><ellipse cx="124" cy="96" rx="5" ry="3.5"/><ellipse cx="154" cy="96" rx="5" ry="3.5"/><ellipse cx="184" cy="104" rx="5" ry="3.5"/></g>
+    <g fill="#7FAE4E"><circle cx="146" cy="86" r="2.6"/><circle cx="170" cy="94" r="2.6"/><circle cx="132" cy="108" r="2.4"/></g>
+  </symbol>
+
+  <!-- 포크 (60x220) — 찌르는 쪽이 아래 -->
+  <symbol id="sym-fork" viewBox="0 0 60 220">
+    <rect x="22" y="0" width="16" height="118" rx="8" fill="url(#gHandle)"/>
+    <rect x="25" y="6" width="5" height="100" rx="2.5" fill="#fff" opacity=".2"/>
+    <path d="M14 120 C 14 112, 46 112, 46 120 L 48 150 C 48 160, 12 160, 12 150 Z" fill="url(#gBlade)"/>
+    <g fill="url(#gBlade)"><rect x="12" y="148" width="7" height="68" rx="3.5"/><rect x="22" y="148" width="7" height="70" rx="3.5"/><rect x="31" y="148" width="7" height="70" rx="3.5"/><rect x="41" y="148" width="7" height="68" rx="3.5"/></g>
+    <path d="M16 156 L16 206" stroke="#fff" stroke-width="2" opacity=".5"/>
+  </symbol>
+</svg>
+
+<main id="app" data-screen="home">
+  <button class="icon-btn" id="soundBtn" aria-label="소리 켜기/끄기">
+    <svg class="on" viewBox="0 0 24 24" fill="none" stroke="#4A3426" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="#4A3426"/><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg>
+    <svg class="off" viewBox="0 0 24 24" fill="none" stroke="#4A3426" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="#4A3426"/><path d="M17 9l5 6M22 9l-5 6"/></svg>
+  </button>
+
+  <!-- ① 홈 -->
+  <section class="screen" id="s-home" aria-label="홈">
+    <div class="beam"></div>
+    <div class="hero"><div class="hero-shadow"></div><div class="gfx" data-gfx="mascot-idle"></div></div>
+    <div class="copy">
+      <svg class="spark" viewBox="0 0 60 30"><use href="#sym-spark"/></svg>
+      <h1 class="h-title game-title" id="homeTitle">오늘도 다짐</h1>
+      <p id="homeSub"></p>
+      <div class="plays" id="homePlays"><i></i>오늘 6/6판 남음</div>
+      <div class="row2">
+        <button class="btn btn-primary" id="startBtn">시작하기</button>
+        <button class="btn btn-soft" id="homeBoard">리더보드</button>
+      </div>
+      <div class="nick-line" id="homeNick" hidden><span id="homeNickName"></span><button class="pen" id="homeNickEdit" aria-label="닉네임 바꾸기">✎</button></div>
+      <div class="links">
+        <button class="link" id="homeHistory">최근 7일 기록</button>
+        <button class="link" id="resetPlays">시연용 · 횟수 초기화</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ②~⑤ 플레이 (인트로·3·2·1·클리어·FAIL은 위에 겹쳐 뜸) -->
+  <section class="screen" id="s-play" aria-label="플레이">
+    <button class="icon-btn" id="quitBtn" aria-label="그만하고 홈으로"><svg viewBox="0 0 24 24" fill="none" stroke="#4A3426" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="play-top">
+      <div class="lv-row"><b id="lvName">LV1 자동 믹서기</b><span id="score">0점</span></div>
+      <div class="dots" id="lvDots"></div>
+    </div>
+    <div class="hud">
+      <div class="meter" id="timeRow"><div class="label"><span>남은 시간</span><b id="timeNum">5.0초</b></div><div class="gauge"><div id="timeBar"></div></div></div>
+    </div>
+    <div class="stage comp" id="stage" data-tool="auto-mixer" role="button" aria-label="마늘 패기 (탭 또는 스페이스바)">
+      <div class="layer base gfx"></div>
+      <div class="layer target" id="target"><div class="gfx" data-gfx="garlic-stage0"></div></div>
+      <div class="layer front gfx"></div>
+      <div class="layer tool gfx"></div>
+      <div class="layer fx" id="fx"></div>
+    </div>
+    <div class="stage-name" id="stageName">통마늘</div>
+    <div class="hud hud2">
+      <div class="meter"><div class="label"><span>진행</span><b id="prog">0/3</b></div><div class="gauge"><div id="progBar"></div></div></div>
+      <div class="meter"><div class="label"><span>화</span><b class="hot" id="angerNum">100</b></div><div class="gauge"><div id="angerBar"></div></div></div>
+    </div>
+    <p class="hint">마늘을 터치<span class="pc"> / Space</span></p>
+  </section>
+
+  <!-- ⑥ 결과 -->
+  <section class="screen" id="s-result" aria-label="결과">
+    <div class="window"></div><div class="moon"></div>
+    <div class="chef"><div class="gfx" data-gfx="mascot-idle"></div></div>
+    <article id="resultCard">
+      <div class="scroll">
+        <div class="eyebrow">오늘의 다짐 기록</div>
+        <div class="res-score"><b id="resScore">0</b>점</div>
+        <div class="res-meta" id="resMeta"></div>
+        <div class="badges" id="resBadges"></div>
+        <div class="res-rank"><span id="resRank"></span> <button class="pen" id="resNickEdit" aria-label="닉네임 바꾸기">✎ 닉네임 바꾸기</button></div>
+        <div id="dinnerWrap"><button class="btn btn-primary btn-block" id="dinnerBtn">오늘의 저녁 보기</button></div>
+        <div id="dinnerCard" hidden>
+          <div class="din-eyebrow">오늘 저녁, 이거 어때요?</div>
+          <div id="menuGroup"></div>
+          <div id="menuName"></div>
+          <div class="menu-art"><div class="gfx" id="menuGfx"></div></div>
+          <p id="menuPs"></p>
+        </div>
+      </div>
+      <div class="actions">
+        <div class="grid4">
+          <button class="btn btn-soft sm" id="saveBtn">이미지 저장</button>
+          <button class="btn btn-kakao sm" id="shareBtn">카카오톡 공유</button>
+          <button class="btn btn-soft sm" id="resBoard">리더보드</button>
+          <button class="btn btn-primary sm" id="retryBtn">다시 하기</button>
+        </div>
+        <p id="resLeft"></p>
+      </div>
+    </article>
+  </section>
+
+  <!-- ⑧ 오늘 끝 -->
+  <section class="screen" id="s-end" aria-label="오늘 끝">
+    <div class="end-box">
+      <div class="end-hero"><div class="gfx" data-gfx="mascot-idle"></div></div>
+      <h2 class="h-title">오늘은 충분히 다졌어요</h2>
+      <p>내일 또 만나요</p>
+      <div class="plays" id="endPlays">0/6판</div>
+      <small>판 수는 자정(한국 시간)에 다시 채워져요</small>
+      <div class="row2"><button class="btn btn-primary" id="endBoard">리더보드</button><button class="btn btn-soft" id="endHome">홈으로</button></div>
+    </div>
+  </section>
+
+  <!-- 겹침 화면: 레벨 인트로 / 3·2·1 / 클리어 / FAIL -->
+  <div id="overlay">
+    <div class="panel" id="pIntro">
+      <div class="lvl" id="introLevel">LEVEL 1</div>
+      <div class="comp mini" id="introMini"><div class="layer base gfx"></div><div class="layer front gfx"></div><div class="layer tool gfx"></div></div>
+      <div class="tool-tag" id="introTool">도구: 자동 믹서기</div>
+      <div class="big" id="introTime">5.0초 안에!</div>
+      <p class="sub" id="introTaste"></p>
+    </div>
+    <div class="panel count" id="pCount"><div class="num" id="countNum">3</div><p class="sub" id="countNote">준비!</p></div>
+    <div class="panel" id="pClear">
+      <div class="clear-title" id="clearTitle">LV1 CLEAR!</div>
+      <div class="pts" id="clearPts">+0점</div>
+      <div class="bonus" id="clearBonus" hidden></div>
+      <p class="sub" id="clearNext"></p>
+    </div>
+    <div class="panel" id="pFail">
+      <div class="fail-title">FAIL</div>
+      <div class="tool-tag" id="failLv">LV1</div>
+      <p class="sub" id="failShort"></p>
+      <button class="btn btn-kakao btn-block" id="continueBtn">친구에게 공유하고 한 번 더</button>
+      <p class="tiny" id="continueLeft">남은 기회 1 · 실패한 레벨부터, 점수는 그대로</p>
+      <button class="btn btn-soft btn-block" id="giveUpBtn">결과 보기</button>
+    </div>
+  </div>
+
+  <!-- ⑦ 리더보드 -->
+  <div class="dim" id="boardDim"></div>
+  <div class="sheet tall" id="board" role="dialog" aria-label="리더보드">
+    <div class="grab"></div>
+    <div class="sheet-head"><h3 id="boardTitle">이번 달 랭킹</h3><button class="link" id="closeBoard">닫기</button></div>
+    <p class="note">1인당 이번 달 최고 판 점수 · 동점이면 먼저 기록한 사람이 위 · ♻ 이어하기 기록<br>지금은 이 기기에 저장된 기록으로 순위를 보여줘요</p>
+    <ol class="rank-list" id="boardList"></ol>
+    <div class="me-head">내 순위</div>
+    <ol class="rank-list" id="boardMe"></ol>
+    <div class="nick-line" id="boardNick" hidden><span id="boardNickName"></span><button class="pen" id="boardNickEdit">✎ 닉네임 바꾸기</button></div>
+    <div class="me-head" id="fameTitle">명예의 전당</div>
+    <ol class="rank-list fame" id="fameList"></ol>
+  </div>
+
+  <!-- 최근 7일 -->
+  <div class="dim" id="sheetDim"></div>
+  <div class="sheet" id="sheet" role="dialog" aria-label="최근 7일 기록">
+    <div class="grab"></div>
+    <div class="sheet-head"><h3>최근 7일</h3><button class="link" id="closeSheet">닫기</button></div>
+    <div id="weekSum" class="note"></div>
+    <div id="days"></div>
+    <button class="link" id="clearHistory">기록 지우기</button>
+  </div>
+
+  <!-- 닉네임 바꾸기 -->
+  <div class="modal" id="nickModal">
+    <form class="modal-card" id="nickForm">
+      <h3>닉네임 바꾸기</h3>
+      <div class="nick-input"><input id="nickInput" maxlength="10" autocomplete="off"><span id="nickTag">#0000</span></div>
+      <p class="tiny">2~10자 · 뒤의 #네 자리는 그대로 유지돼요</p>
+      <p class="err" id="nickErr"></p>
+      <div class="row2"><button type="button" class="btn btn-soft" id="nickCancel">취소</button><button type="submit" class="btn btn-primary">저장</button></div>
+    </form>
+  </div>
+
+  <div id="toast" role="status"></div>
 </main>
 
 <script src="src/config.js"></script>
-<script>
-  // config.js 확인용 (게임 코드가 들어오면 삭제)
-  const list = document.getElementById('levels');
-  for (const lv of CONFIG.LEVELS) {
-    const li = document.createElement('li');
-    li.textContent = `LV${lv.level} ${lv.name} · ${lv.taps}탭 · ${lv.timeLimit.toFixed(1)}초 · 화 −${lv.relief}`;
-    list.appendChild(li);
-  }
-</script>
+<script src="src/secrets.js"></script>
+<script src="src/leaderboard.js"></script>
+<script src="src/share.js"></script>
+<script src="src/view.js"></script>
+<script src="src/game.js"></script>
 </body>
 </html>

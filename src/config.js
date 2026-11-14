@@ -47,11 +47,22 @@ const CONFIG = {
    * 100에서 시작, 레벨을 깰 때마다 그 도구의 relief만큼 줄어듦 (6레벨 합계 107) */
   ANGER: { start: 100 },
 
-  /* ---------- 연출 시간 (기획서 6장) ---------- */
+  /* ---------- 연출 시간 (기획서 6장) ----------
+   * 레벨 인트로 + 3·2·1 = introPanelSeconds + countdownFrom × countStepSeconds = 약 1.5초
+   * 이 동안에는 제한시간이 가지 않음 */
   TIMING: {
     countdownFrom: 3,            // 3·2·1
-    introSeconds: 1.5,           // 레벨 인트로 + 카운트 (이 동안 시간은 안 감)
-    clearPopupSeconds: 0.8       // "+540점" 표시 시간
+    introPanelSeconds: 0.6,      // "LEVEL 3 · 절구 · 5.8초 안에!" 표시 시간
+    countStepSeconds: 0.3,       // 3, 2, 1 숫자 하나당 시간
+    clearPopupSeconds: 0.8,      // "+540점" 표시 시간
+    failToResultSeconds: 1.5,    // 이어하기를 다 쓴 뒤 FAIL → 결과 화면으로 넘어가는 시간
+    lowTimeRatio: 0.3,           // 남은 시간이 이 비율 아래면 시간 바를 빨갛게
+    toastSeconds: 2.2            // 아래쪽 안내 문구 표시 시간
+  },
+
+  /* ---------- 타격 연출 ---------- */
+  FX: {
+    crumbsPerTap: 3              // 한 번 칠 때 튀는 마늘 조각 수
   },
 
   /* ---------- 점수 (기획서 3-2) ----------
@@ -122,11 +133,48 @@ const CONFIG = {
     bannedWords: []              // 금지어 목록 (채워 주세요)
   },
 
+  /* ---------- 최근 기록 (기획서 8장 '시간이 되면') ---------- */
+  HISTORY: {
+    days: 7                      // 최근 7일
+  },
+
+  /* ---------- 공유와 이미지 저장 (기획서 3-3, 8장) ----------
+   * {score} {level} {relief} {menu} 는 실제 값으로 바뀜 */
+  SHARE: {
+    kakaoSdkUrl: 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js',
+    ogImage: 'src/assets/images/og-image.png',
+    title: '오늘도 다짐',
+    resultText: '오늘 마늘 다지고 화 {relief}% 풀었어요. {score}점! 저녁은 {menu}.',
+    resultTextNoMenu: '오늘 마늘 다지고 화 {relief}% 풀었어요. {score}점!',
+    continueText: 'LV{level}에서 막혔어요. 나 대신 마늘 좀 다져 줄 사람?',
+    buttonText: '나도 다지러 가기',
+    // 결과 카드 이미지 (px)
+    card: {
+      width: 1080, height: 1800, pad: 84, radius: 56,
+      menuArtHeight: 600,
+      font: { eyebrow: 40, score: 200, unit: 64, meta: 40, menuGroup: 34, menu: 76, ps: 40, foot: 32 },
+      lineGap: 1.45
+    }
+  },
+
+  /* ---------- 문구 ---------- */
+  TEXT: {
+    tagline: '퇴근길에 쌓인 화를 마늘에 풀고, 끝까지 다진 만큼 오늘의 저녁 메뉴를 받는 게임'
+  },
+
+  /* ---------- 효과음 (src/assets/sounds/) ----------
+   * 파일이 없으면 짧은 기본음으로 대신함 */
+  SOUND: {
+    ext: 'mp3',
+    fallbackTone: { freq: 160, seconds: 0.07, volume: 0.18 }
+  },
+
   /* ---------- 그래픽 (기획서 7-2) ---------- */
   ASSETS: {
     imageDir: 'src/assets/images/',
     soundDir: 'src/assets/sounds/',
-    // 파일이 없으면 이름 글자(예: "포크")를 임시로 띄움
+    extensions: ['svg', 'webp', 'png'],   // 이 순서로 찾아보고, 없으면 index.html 안의 임시 그래픽 사용
+    // 임시 그래픽도 없으면 이름 글자(예: "포크")를 띄움
     fallbackToText: true
   }
 };
