@@ -346,10 +346,14 @@ const View = (() => {
       // 실패해도 여기까지 깬 레벨 기준 메뉴를 보여 줌 (v1.4)
       $('failMenu').hidden = !d.menu;
       if (d.menu) {
-        setGfx($('failMenuGfx'), d.menu.image, d.menu.name);
+        $('failMenuGroup').textContent = d.menuGroup || '';
         $('failMenuName').textContent = d.menu.name;
+        setGfx($('failMenuGfx'), d.menu.image, d.menu.name);
         $('failMenuPs').textContent = d.menu.ps;
       }
+      $('failScore').textContent = (d.score || 0).toLocaleString('ko-KR');
+      setGfx(document.querySelector('#pFail .chef .gfx'), 'mascot-idle');
+      document.querySelector('#pFail .scroll').scrollTop = 0;
       renderDots(d.index, true);
       Sound.play('sfx-fail', false);
     }

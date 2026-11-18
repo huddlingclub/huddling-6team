@@ -262,7 +262,7 @@ const Game = (() => {
     const canContinue = S.run.continuesLeft > 0;
     // 실패해도 여기까지 깬 레벨 기준으로 메뉴를 바로 보여 줌. 같은 레벨에서 끝나면 결과 화면도 이 메뉴 (v1.4)
     if (!S.menu || S.menu.level !== S.run.cleared) S.menu = pickMenu(S.run.cleared);
-    View.overlay('fail', { level: lv, index: S.run.index, canContinue, continuesLeft: S.run.continuesLeft, menu: S.menu.menu });
+    View.overlay('fail', { level: lv, index: S.run.index, canContinue, continuesLeft: S.run.continuesLeft, menu: S.menu.menu, menuGroup: S.menu.group.label, score: S.run.score });
     if (!canContinue) later(C.TIMING.failToResultSeconds, finish);
   }
 
