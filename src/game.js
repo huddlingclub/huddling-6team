@@ -243,12 +243,17 @@ const Game = (() => {
     if (!canContinue) later(C.TIMING.failToResultSeconds, finish);
   }
 
+  function shareToast(res) {
+    if (res.method === 'copy') View.toast(C.SHARE.copiedToast);
+    if (res.method === 'manual') View.toast(C.SHARE.manualToast);
+  }
+
   async function continueRun() {
     if (S.phase !== 'fail' || S.run.continuesLeft <= 0) return;
     S.phase = 'sharing'; // 공유 바텀시트 때문에 화면을 벗어나도 일시정지하지 않음
     const lv = level();
     const res = await Share.share(Share.continueText({ level: lv.level, score: S.run.score }));
-    if (res.method === 'copy') View.toast(C.SHARE.copiedToast);
+    shareToast(res);
     if (!res.ok) { S.phase = 'fail'; return; }
     S.run.continued = true;
     S.run.continuesLeft -= 1;
@@ -361,7 +366,7 @@ const Game = (() => {
     if (!S.record) return;
     const d = resultData();
     const res = await Share.share(Share.resultText({ score: d.score.toLocaleString('ko-KR'), relief: d.relief, menu: d.menu.name, level: S.run.cleared }));
-    if (res.method === 'copy') View.toast(C.SHARE.copiedToast);
+    shareToast(res);
   }
 
   async function saveImage() {

@@ -20,7 +20,7 @@ const Share = (() => {
     return !!(coarse && navigator.share);
   }
 
-  /* 돌려주는 값: { ok: 공유로 인정하는지, method: 'native' | 'copy' | 'prompt' }
+  /* 돌려주는 값: { ok: 공유로 인정하는지, method: 'native' | 'copy' | 'manual' }
    * 모바일: 바텀시트를 열면 인정 (닫아도 인정) / PC: 링크 복사가 끝나면 인정 (기획서 3-4) */
   async function share(text) {
     const url = siteUrl();
@@ -32,12 +32,30 @@ const Share = (() => {
         if (e && e.name === 'AbortError') return { ok: true, method: 'native' }; // 시트는 열렸음
       }
     }
+    if (await copyText(url)) return { ok: true, method: 'copy' };
+    // 복사까지 막힌 환경(일부 앱 내 브라우저 등): 멈추는 window.prompt 대신 안내 문구만 띄우고 인정
+    return { ok: true, method: 'manual' };
+  }
+
+  /* 링크 복사. 브라우저가 클립보드 권한을 묻느라 응답이 없으면 게임이 멈추므로 시간 제한을 둠.
+   * 안 되면 예전 방식(execCommand)으로 한 번 더 시도 */
+  async function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      const timeout = new Promise(res => setTimeout(() => res(false), S.clipboardTimeoutSeconds * 1000));
+      const copied = navigator.clipboard.writeText(text).then(() => true, () => false);
+      if (await Promise.race([copied, timeout])) return true;
+    }
     try {
-      await navigator.clipboard.writeText(url);
-      return { ok: true, method: 'copy' };
-    } catch (e) { /* 아래로 */ }
-    window.prompt('아래 링크를 복사해서 친구에게 보내 주세요', url);
-    return { ok: true, method: 'prompt' };
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;';
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      ta.remove();
+      return ok;
+    } catch (e) { return false; }
   }
 
   function resultText(r) { return fill(S.resultText, r); }

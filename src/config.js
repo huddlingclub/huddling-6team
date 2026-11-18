@@ -169,6 +169,8 @@ const CONFIG = {
     resultText: '오늘 마늘 다지고 화 {relief}% 풀었어요. {score}점! 저녁은 {menu}.',
     continueText: 'LV{level}에서 막혔어요. 나 대신 마늘 좀 다져 줄 사람?',
     copiedToast: '링크 복사 완료!',
+    manualToast: '주소창의 링크를 친구에게 보내 주세요',
+    clipboardTimeoutSeconds: 1.5,  // 링크 복사가 이 시간 안에 안 끝나면 다른 방법으로 복사 (게임이 멈추지 않게)
     // 메뉴 카드 이미지 (px): 메뉴명, 한 줄 PS, 점수
     card: {
       width: 1080, height: 1600, pad: 84, radius: 56,

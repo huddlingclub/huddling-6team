@@ -1,0 +1,5 @@
+docs/
+.github/
+CLAUDE.md
+README.md
+src/secrets.example.js
