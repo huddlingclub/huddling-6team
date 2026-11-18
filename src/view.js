@@ -343,6 +343,13 @@ const View = (() => {
       $('continueLeft').hidden = !d.canContinue;
       $('continueLeft').textContent = '남은 기회 ' + d.continuesLeft + ' · 실패한 레벨부터, 점수는 그대로';
       $('giveUpBtn').textContent = d.canContinue ? '결과 보기' : '결과 보러 가는 중…';
+      // 실패해도 여기까지 깬 레벨 기준 메뉴를 보여 줌 (v1.4)
+      $('failMenu').hidden = !d.menu;
+      if (d.menu) {
+        setGfx($('failMenuGfx'), d.menu.image, d.menu.name);
+        $('failMenuName').textContent = d.menu.name;
+        $('failMenuPs').textContent = d.menu.ps;
+      }
       renderDots(d.index, true);
       Sound.play('sfx-fail', false);
     }
@@ -480,6 +487,14 @@ const View = (() => {
     /* 마늘 터치: pointerdown이 가장 빠름. 확대·스크롤 막기 */
     $('stage').addEventListener('pointerdown', e => { e.preventDefault(); G.tap(); });
     $('stage').addEventListener('contextmenu', e => e.preventDefault());
+
+    /* 미션·점수 팝업은 화면 아무 데나 탭하면 바로 넘어감 (v1.4). PC는 스페이스바(G.tap에서 처리) */
+    $('overlay').addEventListener('pointerdown', e => {
+      const p = $('overlay').dataset.panel;
+      if (p !== 'intro' && p !== 'clear') return;
+      e.preventDefault();
+      G.skipPopup();
+    });
 
     /* PC 스페이스바: 누르고 있기(repeat)는 1번만. 플레이 중에는 버튼이 눌리지 않게 막음 */
     const playing = () => $('app').dataset.screen === 'play';

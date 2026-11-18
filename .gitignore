@@ -12,3 +12,4 @@ Thumbs.db
 # 기타
 node_modules/
 *.log
+.vercel

@@ -24,11 +24,31 @@ const Game = (() => {
     timers: [],
     raf: 0,
     resumeTo: null,   // 'level' = 미션 팝업부터, 'play' = 하던 곳부터
+    popupAt: 0,       // 미션·점수 팝업이 뜬 시각
+    popupNext: null,  // 팝업이 끝나면 할 일 (시간이 다 되거나 탭하면 실행)
     nickCreated: false
   };
 
   /* ---------- 타이머 ---------- */
   function later(seconds, fn) { S.timers.push(setTimeout(fn, seconds * MS)); }
+
+  /* 미션·점수 팝업: seconds 뒤 자동으로, 또는 탭하면 바로 next 실행 (v1.4) */
+  function popup(seconds, next) {
+    S.popupAt = performance.now();
+    S.popupNext = next;
+    later(seconds, runPopupNext);
+  }
+  function runPopupNext() {
+    const next = S.popupNext;
+    S.popupNext = null;
+    if (next) next();
+  }
+  function skipPopup() {
+    if (S.phase !== 'mission' && S.phase !== 'score') return;
+    if (!S.popupNext || performance.now() - S.popupAt < C.TIMING.popupSkipGuardSeconds * MS) return;
+    clearTimers();
+    runPopupNext();
+  }
   function clearTimers() {
     S.timers.forEach(clearTimeout);
     S.timers = [];
@@ -100,7 +120,7 @@ const Game = (() => {
     View.renderLevel({ level: lv, index: S.run.index, score: S.run.score, anger: S.run.anger });
     S.phase = 'mission';
     View.overlay('mission', { level: lv, seconds: C.TIMING.missionPopupSeconds });
-    later(C.TIMING.missionPopupSeconds, () => { View.overlay(null); beginPlay(); });
+    popup(C.TIMING.missionPopupSeconds, () => { View.overlay(null); beginPlay(); });
   }
 
   /* 3·2·1 (앱을 벗어났다 돌아왔을 때만) */
@@ -162,6 +182,7 @@ const Game = (() => {
 
   /* ---------- 다지기 ---------- */
   function tap() {
+    if (S.phase === 'mission' || S.phase === 'score') { skipPopup(); return; }
     if (S.phase !== 'play') return;
     const lv = level();
     const run = S.run;
@@ -223,7 +244,7 @@ const Game = (() => {
     View.renderAnger(run.anger);
     View.overlay('score', { level: lv, index: run.index, points, bonus, seconds: C.TIMING.scorePopupSeconds });
 
-    later(C.TIMING.scorePopupSeconds, () => {
+    popup(C.TIMING.scorePopupSeconds, () => {
       if (last) { finish(); return; }
       run.index += 1;
       startLevel();
@@ -239,7 +260,9 @@ const Game = (() => {
     S.run.comboGap = 0;
     View.renderCombo(comboView(false));
     const canContinue = S.run.continuesLeft > 0;
-    View.overlay('fail', { level: lv, index: S.run.index, canContinue, continuesLeft: S.run.continuesLeft });
+    // 실패해도 여기까지 깬 레벨 기준으로 메뉴를 바로 보여 줌. 같은 레벨에서 끝나면 결과 화면도 이 메뉴 (v1.4)
+    if (!S.menu || S.menu.level !== S.run.cleared) S.menu = pickMenu(S.run.cleared);
+    View.overlay('fail', { level: lv, index: S.run.index, canContinue, continuesLeft: S.run.continuesLeft, menu: S.menu.menu });
     if (!canContinue) later(C.TIMING.failToResultSeconds, finish);
   }
 
@@ -252,7 +275,7 @@ const Game = (() => {
     if (S.phase !== 'fail' || S.run.continuesLeft <= 0) return;
     S.phase = 'sharing'; // 공유 바텀시트 때문에 화면을 벗어나도 일시정지하지 않음
     const lv = level();
-    const res = await Share.share(Share.continueText({ level: lv.level, score: S.run.score }));
+    const res = await Share.share(Share.continueText({ level: lv.level, score: S.run.score, menu: S.menu ? S.menu.menu.name : '' }));
     shareToast(res);
     if (!res.ok) { S.phase = 'fail'; return; }
     S.run.continued = true;
@@ -320,7 +343,7 @@ const Game = (() => {
     const list = pool.length ? pool : group.menus;
     const menu = list[Math.floor(Math.random() * list.length)];
     Store.set('lastMenu', menu.name);
-    return { group, menu };
+    return { group, menu, level: levelReached };
   }
 
   function resultData() {
@@ -348,7 +371,7 @@ const Game = (() => {
     const run = S.run;
     const made = Records.ensureNick();
     S.nickCreated = made.created;
-    S.menu = pickMenu(run.cleared);
+    if (!S.menu || S.menu.level !== run.cleared) S.menu = pickMenu(run.cleared);
     S.record = Records.add({
       nick: Records.nickText(made.nick),
       score: run.score,
@@ -422,7 +445,7 @@ const Game = (() => {
   }
 
   const api = {
-    start, tap, quit, pause, resume, continueRun, giveUp, shareResult, saveImage, retry, home,
+    start, tap, skipPopup, quit, pause, resume, continueRun, giveUp, shareResult, saveImage, retry, home,
     openBoard, openHistory, clearHistory, editNick, saveNick, resetPlays,
     get state() { return S; } // 개발자 도구에서 확인용
   };

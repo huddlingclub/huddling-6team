@@ -51,8 +51,9 @@ const CONFIG = {
   /* ---------- 연출 시간 (기획서 3-5 팝업 시간, 6장) ----------
    * 제한시간은 미션 팝업이 닫힌 뒤부터 잼. 팝업이 떠 있는 동안은 시간도 콤보 간격도 안 감 */
   TIMING: {
-    missionPopupSeconds: 3.5,    // 미션 팝업 "LEVEL 3 · 절구 · 미션" 표시 후 자동 시작
-    scorePopupSeconds: 2.8,      // 점수 팝업 "LV3 CLEAR! +540점" 표시 후 다음 미션
+    missionPopupSeconds: 2.0,    // 미션 팝업 "LEVEL 3 · 절구 · 미션" 표시 후 자동 시작 (v1.4: 3.5 → 2.0)
+    scorePopupSeconds: 1.5,      // 점수 팝업 "LV3 CLEAR! +540점" 표시 후 다음 미션 (v1.4: 2.8 → 1.5)
+    popupSkipGuardSeconds: 0.4,  // 팝업이 뜬 뒤 이 시간이 지나야 탭으로 넘길 수 있음 (연타가 팝업을 바로 넘기지 않게)
     countdownFrom: 3,            // 앱을 벗어났다 돌아오면 3·2·1 후 재개 (기획서 3-5)
     countStepSeconds: 0.5,       // 3, 2, 1 숫자 하나당 시간
     failToResultSeconds: 1.5,    // 이어하기를 다 쓴 뒤 FAIL → 결과 화면으로 넘어가는 시간
@@ -167,7 +168,7 @@ const CONFIG = {
   SHARE: {
     title: '오늘도 다짐',
     resultText: '오늘 마늘 다지고 화 {relief}% 풀었어요. {score}점! 저녁은 {menu}.',
-    continueText: 'LV{level}에서 막혔어요. 나 대신 마늘 좀 다져 줄 사람?',
+    continueText: '오늘 저녁은 {menu}! 근데 LV{level}에서 막혔어요. 나 대신 마늘 좀 다져 줄 사람?',
     copiedToast: '링크 복사 완료!',
     manualToast: '주소창의 링크를 친구에게 보내 주세요',
     clipboardTimeoutSeconds: 1.5,  // 링크 복사가 이 시간 안에 안 끝나면 다른 방법으로 복사 (게임이 멈추지 않게)
