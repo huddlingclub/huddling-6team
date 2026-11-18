@@ -575,3 +575,14 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* 마스코트 표정 (v1.4): FAIL은 우는 마늘, 클리어·결과는 환호하는 마늘 */
+.clear-chef { width: 72px; aspect-ratio: 200 / 230; margin-bottom: -4px; animation: cheer .6s ease-in-out infinite alternate; }
+.clear-chef svg, .clear-chef img { width: 100%; height: 100%; }
+#pFail .chef .gfx { animation: sob .5s ease-in-out infinite alternate; }
+#pFail .chef .tear { animation: tear 1s ease-in infinite; }
+#s-result .chef .gfx { animation: cheer .7s ease-in-out infinite alternate; }
+@keyframes cheer { from { transform: translateY(0) rotate(-4deg); } to { transform: translateY(-8px) rotate(4deg); } }
+@keyframes sob { from { transform: translateY(0) scaleY(1); } to { transform: translateY(2px) scaleY(.97); } }
+@keyframes tear { 0% { opacity: 0; transform: translateY(-4px); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(10px); } }
+@media (prefers-reduced-motion: reduce) { .clear-chef, #pFail .chef .gfx, #pFail .chef .tear, #s-result .chef .gfx { animation: none; } }

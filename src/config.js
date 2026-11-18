@@ -25,12 +25,12 @@ const CONFIG = {
    * mission: 미션 팝업 문구, image: src/assets/images/ 안의 파일 이름(확장자 제외)
    * 필요 속도 = taps ÷ timeLimit → LV1 초당 1.2회 ~ LV6 초당 4.6회 */
   LEVELS: [
-    { level: 1, key: 'auto-mixer', name: '자동 믹서기', taps: 6,  timeLimit: 5.0, sound: '위이이잉—',     mission: '버튼만 누르면 끝! 가볍게 몸 풀자',  taste: '몇 번만 눌러도 끝나는 몸풀기',               relief: 12, image: 'tool-auto-mixer' },
-    { level: 2, key: 'hand-mixer', name: '수동 믹서기', taps: 10, timeLimit: 5.4, sound: '드르륵 드르륵', mission: '손잡이 돌리듯 쉬지 말고 연타!',     taste: '손잡이를 돌리듯 연타하는 맛',                relief: 15, image: 'tool-hand-mixer' },
-    { level: 3, key: 'mortar',     name: '절구',        taps: 14, timeLimit: 5.8, sound: '쿵! 쿵!',       mission: '묵직하게 빻아 버려라!',             taste: '한 방 한 방이 묵직함',                       relief: 17, image: 'tool-mortar' },
-    { level: 4, key: 'knife',      name: '칼과 도마',   taps: 20, timeLimit: 6.2, sound: '탁탁탁',        mission: '리듬 타며 잘게 다져라!',            taste: '리듬감 있게 정성껏 다지는 맛',               relief: 18, image: 'tool-knife' },
-    { level: 5, key: 'fist',       name: '맨주먹',      taps: 26, timeLimit: 6.6, sound: '퍽! 퍽!',       mission: '오늘 쌓인 화, 주먹으로 터뜨려라!',  taste: '직접 패는 쾌감이 최고. 화면이 크게 흔들림', relief: 20, image: 'tool-fist', shake: 'strong' },
-    { level: 6, key: 'fork',       name: '포크',        taps: 32, timeLimit: 7.0, sound: '콕! 콕!',       mission: '최종 보스! 끝까지 찔러라!',         taste: '찔러도 찔러도 안 다져지는 극한의 인내. 최종 보스', relief: 25, image: 'tool-fork' }
+    { level: 1, key: 'auto-mixer', name: '자동 믹서기', taps: 12,  timeLimit: 6.0, sound: '위이이잉—',     mission: '버튼만 누르면 끝! 가볍게 몸 풀자',  taste: '가볍게 손 푸는 몸풀기',               relief: 12, image: 'tool-auto-mixer' },
+    { level: 2, key: 'hand-mixer', name: '수동 믹서기', taps: 18, timeLimit: 6.6, sound: '드르륵 드르륵', mission: '손잡이 돌리듯 쉬지 말고 연타!',     taste: '손잡이를 돌리듯 연타하는 맛',                relief: 15, image: 'tool-hand-mixer' },
+    { level: 3, key: 'mortar',     name: '절구',        taps: 24, timeLimit: 7.2, sound: '쿵! 쿵!',       mission: '묵직하게 빻아 버려라!',             taste: '한 방 한 방이 묵직함',                       relief: 17, image: 'tool-mortar' },
+    { level: 4, key: 'knife',      name: '칼과 도마',   taps: 30, timeLimit: 7.8, sound: '탁탁탁',        mission: '리듬 타며 잘게 다져라!',            taste: '리듬감 있게 정성껏 다지는 맛',               relief: 18, image: 'tool-knife' },
+    { level: 5, key: 'fist',       name: '맨주먹',      taps: 36, timeLimit: 8.4, sound: '퍽! 퍽!',       mission: '오늘 쌓인 화, 주먹으로 터뜨려라!',  taste: '직접 패는 쾌감이 최고. 화면이 크게 흔들림', relief: 20, image: 'tool-fist', shake: 'strong' },
+    { level: 6, key: 'fork',       name: '포크',        taps: 42, timeLimit: 9.0, sound: '콕! 콕!',       mission: '최종 보스! 끝까지 찔러라!',         taste: '찔러도 찔러도 안 다져지는 극한의 인내. 최종 보스', relief: 25, image: 'tool-fork' }
   ],
 
   /* ---------- 다져지는 단계 (기획서 2-3) ----------

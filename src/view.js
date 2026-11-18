@@ -28,6 +28,7 @@ const View = (() => {
 
   function spriteId(name) {
     if (SPRITES[name]) return SPRITES[name];
+    if (name === 'mascot-fail' || name === 'mascot-happy') return 'sym-' + name; // 우는 마늘, 환호하는 마늘
     if (/^mascot-/.test(name)) return 'sym-mascot';
     const g = name.match(/^garlic-stage(\d+)$/);
     if (g) return 'sym-g' + g[1];
@@ -352,7 +353,7 @@ const View = (() => {
         $('failMenuPs').textContent = d.menu.ps;
       }
       $('failScore').textContent = (d.score || 0).toLocaleString('ko-KR');
-      setGfx(document.querySelector('#pFail .chef .gfx'), 'mascot-idle');
+      setGfx(document.querySelector('#pFail .chef .gfx'), 'mascot-fail');
       document.querySelector('#pFail .scroll').scrollTop = 0;
       renderDots(d.index, true);
       Sound.play('sfx-fail', false);
