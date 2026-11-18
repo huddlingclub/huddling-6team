@@ -360,14 +360,30 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .bonus { padding: 6px 14px; border-radius: 999px; background: var(--gold); font-family: var(--font-title); font-size: 18px; }
 .fail-title { font-family: var(--font-title); font-size: 60px; line-height: 1; color: var(--danger); letter-spacing: 2px; }
 #pFail .btn-block { margin-top: 6px; }
-/* FAIL 화면의 오늘의 저녁 (v1.4) */
-.fail-menu { width: 100%; margin-top: 4px; padding: 12px 14px; border-radius: 18px; background: var(--bg); display: flex; flex-direction: column; gap: 6px; text-align: left; }
-.fail-menu .din-eyebrow { text-align: center; }
-.fail-menu-row { display: flex; align-items: center; gap: 12px; }
-.fail-menu-art { flex: 0 0 76px; height: 56px; }
-.fail-menu-text { min-width: 0; }
-.fail-menu-name { font-family: var(--font-title); font-size: 22px; line-height: 1.2; }
-.fail-menu-ps { margin: 2px 0 0; font-size: 12px; line-height: 1.5; color: var(--ink-soft); word-break: keep-all; }
+/* FAIL은 팝업이 아니라 전체 화면 (v1.4): 메뉴 카드를 크게 보여 주고 아래에 버튼 */
+#overlay[data-panel="fail"] {
+  padding: 0; background: var(--bg);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+#overlay[data-panel="fail"] #pFail {
+  width: 100%; height: 100%; max-width: none;
+  justify-content: center; gap: 10px;
+  padding: calc(var(--safe-top) + 24px) 24px calc(var(--safe-bottom) + 24px);
+  border-radius: 0; background: var(--bg); box-shadow: none;
+  overflow-y: auto;
+}
+#pFail .fail-title { font-size: 72px; }
+.fail-menu {
+  width: 100%; margin: 6px 0 4px; padding: 18px 16px 16px;
+  border-radius: 22px; background: var(--card);
+  box-shadow: 0 6px 0 rgba(74,52,38,.08);
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.fail-menu-row { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.fail-menu-art { width: 62%; aspect-ratio: 3 / 2; }
+.fail-menu-text { text-align: center; }
+.fail-menu-name { font-family: var(--font-title); font-size: 30px; line-height: 1.2; }
+.fail-menu-ps { margin: 4px 0 0; font-size: 14px; line-height: 1.6; color: var(--ink); word-break: keep-all; }
 /* 미션·점수 팝업은 탭하면 바로 넘어감 */
 #overlay[data-panel="intro"], #overlay[data-panel="clear"] { cursor: pointer; touch-action: manipulation; }
 .skip-hint { margin-top: 2px; }
@@ -568,3 +584,4 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+#pFail .tool-tag { background: var(--card); }
